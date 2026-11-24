@@ -60,6 +60,11 @@ p { margin: 0; font-size: 32px; line-height: 1.4; }
 .dark .eyebrow { color: #E8743B; }
 .accent .eyebrow { color: #14213D; }
 
+/* Where we are in the talk: small and grey, so the slide has one title */
+.part { font-size: 24px; font-weight: 400; color: #4A5568; letter-spacing: 0.5px; }
+.dark .part { color: #B8C2D6; }
+.accent .part { color: #14213D; opacity: 0.75; }
+
 .lead { font-size: 44px; line-height: 1.3; color: #4A5568; }
 .dark .lead { color: #B8C2D6; }
 .accent .lead { color: #14213D; }
@@ -171,7 +176,6 @@ th { font-weight: 600; }
 <!-- Exported from the Slides artifact. Arrow keys, space or click to move; F for full screen. -->
 <div class="deck">
 <section id="cover" class="dark" data-transition="fade">
-<p class="eyebrow">Hands-on workshop</p>
 <h1>Building a web app<br>with AI</h1>
 <p class="lead">No coding experience needed — just curiosity.</p>
 <div class="spacer"></div>
@@ -181,7 +185,7 @@ th { font-weight: 600; }
 </div>
 </section>
 <section id="web-app">
-<p class="eyebrow">First things first</p>
+<p class="part">Part 1 of 5 · What’s possible</p>
 <h2>A website shows you something.<br>A web app does something for you.</h2>
 <div class="cards">
 <div class="card rise" style="--i:0"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg><h3>Website</h3><p class="text">A poster on the internet. The same for everyone, and it only changes when someone edits it. A news article, a company’s homepage.</p></div>
@@ -190,8 +194,8 @@ th { font-weight: 600; }
 <p class="lead">The test: same address, different page. Your Gmail isn’t my Gmail — there’s a program behind it. That program is what we build today.</p>
 </section>
 <section id="restaurant">
-<p class="eyebrow">What a web app is made of</p>
-<h2>Like a restaurant: three rooms</h2>
+<p class="part">Part 1 of 5 · What’s possible</p>
+<h2>A web app is like a restaurant: three rooms</h2>
 <div class="flow">
 <div class="card rise" style="--i:0"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg><h3>Dining room</h3><p class="label">Frontend</p><p class="text">The page you see and click in the browser.</p></div>
 <svg class="arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 36" aria-hidden="true"><polygon points="0,11 32,11 32,0 56,18 32,36 32,25 0,25" fill="#E8743B"/></svg>
@@ -201,8 +205,20 @@ th { font-weight: 600; }
 </div>
 <p class="lead">The AI and the email service are suppliers: only the kitchen calls them.</p>
 </section>
+<section id="apps">
+<p class="part">Part 1 of 5 · What’s possible</p>
+<h2>The same three rooms, in apps you know</h2>
+<table>
+<tr class="head"><th style="width:16%"></th><th style="width:26%">Dining room</th><th style="width:32%">Kitchen</th><th>Pantry</th></tr>
+<tr><td><b>Netflix</b></td><td>Posters, play button</td><td>Picks films, streams them</td><td>Account, watch history</td></tr>
+<tr><td><b>Instagram</b></td><td>Feed, the heart</td><td>Shrinks photos, picks your feed</td><td>Photos, likes, followers</td></tr>
+<tr><td><b>Uber</b></td><td>Map, “Request ride”</td><td>Finds a driver, sets the price</td><td>Drivers, trips, cards</td></tr>
+<tr><td><b>Gmail</b></td><td>Inbox, send button</td><td>Blocks spam, sends mail</td><td>Emails, contacts</td></tr>
+</table>
+<p class="lead">Different apps, same recipe. Ours will have all three rooms too.</p>
+</section>
 <section id="gap">
-<p class="eyebrow">What I see</p>
+<p class="part">Part 1 of 5 · What’s possible</p>
 <h2>AI can do far more than the chat window shows.</h2>
 <div class="flow">
 <div class="card rise" style="--i:0; padding:32px"><p class="label">Code is just text</p><p class="text">An app is thousands of lines of written instructions.</p></div>
@@ -214,8 +230,8 @@ th { font-weight: 600; }
 <p class="lead">The chat window is the smallest door into AI. The better way: an agent that writes the code, runs it, and uses tools to prove it’s right.</p>
 </section>
 <section id="three-ways" class="alt">
-<p class="eyebrow">Three ways to use AI</p>
-<h2>From asking questions to building together</h2>
+<p class="part">Part 1 of 5 · What’s possible</p>
+<h2>Three ways to use AI: from asking to building together</h2>
 <div class="cards">
 <div class="card rise" style="--i:0"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg><h3>Ask</h3><p class="text">You ask, it answers. Useful, but you still do all the work.</p></div>
 <div class="card rise" style="--i:1"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg><h3>Copy &amp; paste</h3><p class="text">It writes code in the chat. You copy it somewhere and hope it works.</p></div>
@@ -224,7 +240,7 @@ th { font-weight: 600; }
 <p class="lead">Today we practise the third.</p>
 </section>
 <section id="colleagues" class="dark">
-<p class="eyebrow">How to think about AI</p>
+<p class="part">Part 1 of 5 · What’s possible</p>
 <h2>Imagine ten expert colleagues who do exactly what you ask.</h2>
 <div class="cards">
 <div class="card rise" style="--i:0"><p class="label">A vague brief</p><p class="text">“Make me a booking page.”</p><p class="text">They guess: which tools, which fields, who may see what. Ten experts, ten different apps.</p></div>
@@ -233,14 +249,14 @@ th { font-weight: 600; }
 <p class="lead">Brilliant, fast, tireless — and literal. Whatever you leave out, they decide for you.</p>
 </section>
 <section id="idea" class="accent">
-<p class="eyebrow">The idea</p>
+<p class="part">Part 1 of 5 · What’s possible</p>
 <h1>Let’s build a real web app — together, with AI.</h1>
 <div class="spacer"></div>
 <p class="lead">You describe what you want. The AI builds it. We check that it really works.</p>
 </section>
 <section id="agenda">
-<p class="eyebrow">Today</p>
-<h2>The plan</h2>
+<p class="part">Part 1 of 5 · What’s possible</p>
+<h2>Today’s plan</h2>
 <table>
 <tr class="head"><th style="width:32%">Part</th><th>What happens</th></tr>
 <tr><td>What’s possible</td><td>What a web app is, what AI can do, and how to think about it</td></tr>
@@ -251,7 +267,7 @@ th { font-weight: 600; }
 </table>
 </section>
 <section id="weak-spots" class="alt">
-<p class="eyebrow">Know the weak spots</p>
+<p class="part">Part 2 of 5 · Where AI goes wrong</p>
 <h2>What AI is bad at</h2>
 <div class="grid2">
 <div class="card rise" style="--i:0"><p class="label">Hallucination</p><h3>Confidently wrong</h3><p class="text">Invents a setting that doesn’t exist, or says “done” when it isn’t.</p></div>
@@ -261,7 +277,7 @@ th { font-weight: 600; }
 </div>
 </section>
 <section id="solved" class="dark">
-<p class="eyebrow">The good news</p>
+<p class="part">Part 2 of 5 · Where AI goes wrong</p>
 <h2>Developers met these problems long ago — and built tools for them.</h2>
 <table>
 <tr class="head" style="background:#1F2E52"><th style="width:30%">Weak spot</th><th>What catches it</th></tr>
@@ -273,7 +289,7 @@ th { font-weight: 600; }
 <p class="lead">We don’t trust the AI more. We check it more — automatically.</p>
 </section>
 <section id="just-ask" class="alt">
-<p class="eyebrow">The building blocks</p>
+<p class="part">Part 2 of 5 · Where AI goes wrong</p>
 <h2>You could just ask Claude to “make me an app”. So why a starter kit?</h2>
 <div class="cards">
 <div class="card rise" style="--i:0">
@@ -297,7 +313,7 @@ th { font-weight: 600; }
 </div>
 </section>
 <section id="house" class="dark">
-<p class="eyebrow">An analogy</p>
+<p class="part">Part 2 of 5 · Where AI goes wrong</p>
 <h2>Don’t start in an empty field.</h2>
 <p class="lead">Start on a plot that already has foundations, plumbing and electricity — and a building inspector who checks every wall the moment it goes up.</p>
 <div class="spacer"></div>
@@ -308,8 +324,8 @@ th { font-weight: 600; }
 </div>
 </section>
 <section id="docker" class="alt">
-<p class="eyebrow">Docker</p>
-<h2>A shipping container for software</h2>
+<p class="part">Part 2 of 5 · Where AI goes wrong</p>
+<h2>Docker: a shipping container for software</h2>
 <p class="lead">Before shipping containers, every port loaded cargo its own way. Docker packs the app and everything it needs into one standard box.</p>
 <p class="muted">So the restaurant opens the same way on every laptop — yours, mine, and the server’s.</p>
 <div class="cards">
@@ -319,8 +335,8 @@ th { font-weight: 600; }
 </div>
 </section>
 <section id="safety-net">
-<p class="eyebrow">The safety net</p>
-<h2>Four checkers that never get tired</h2>
+<p class="part">Part 2 of 5 · Where AI goes wrong</p>
+<h2>The safety net: four tireless checkers</h2>
 <div class="grid2">
 <div class="card rise" style="--i:0"><p class="label">Formatter</p><h3>The tidy-up</h3><p class="text">Puts every space and line break in its place, like auto-format in Word.</p></div>
 <div class="card rise" style="--i:1"><p class="label">Linter</p><h3>The grammar checker</h3><p class="text">Knows the classic mistakes — security holes too — and points at them.</p></div>
@@ -329,7 +345,7 @@ th { font-weight: 600; }
 </div>
 </section>
 <section id="loop" class="dark">
-<p class="eyebrow">How it fits together</p>
+<p class="part">Part 2 of 5 · Where AI goes wrong</p>
 <h2>The AI works inside the safety net</h2>
 <div class="flow">
 <div class="card rise" style="--i:0; padding:32px"><p class="step-num">1</p><p class="text">You describe what you want</p></div>
@@ -344,7 +360,7 @@ th { font-weight: 600; }
 <p class="muted">Then the AI opens the page to look at it, a second AI reviews the changes, and you decide.</p>
 </section>
 <section id="good-plan">
-<p class="eyebrow">Before you press enter</p>
+<p class="part">Part 3 of 5 · Plan and send</p>
 <h2>A good plan is half the app.</h2>
 <div class="grid2">
 <div class="card rise" style="--i:0"><p class="label">What</p><p class="text">Who uses it, what they can do, and what “done” looks like.</p></div>
@@ -355,7 +371,7 @@ th { font-weight: 600; }
 <p class="lead">Every detail you decide is one the AI doesn’t have to guess.</p>
 </section>
 <section id="decide-early" class="alt">
-<p class="eyebrow">Decide early</p>
+<p class="part">Part 3 of 5 · Plan and send</p>
 <h2>Changing your mind later costs more — with AI too.</h2>
 <div class="cards">
 <div class="card rise" style="--i:0"><p class="label">On the drawing</p><h3>Move a wall: an eraser.</h3><p class="text">Who logs in, where the data lives, how it runs online — cheap to decide now.</p></div>
@@ -364,7 +380,7 @@ th { font-weight: 600; }
 <p class="lead">AI makes building fast. It doesn’t make rebuilding free.</p>
 </section>
 <section id="prompts" class="alt">
-<p class="eyebrow">Describing what you want</p>
+<p class="part">Part 3 of 5 · Plan and send</p>
 <h2>Small changes in wording, big difference</h2>
 <table>
 <tr class="head"><th style="width:32%">Instead of…</th><th>Try…</th></tr>
@@ -376,7 +392,7 @@ th { font-weight: 600; }
 </table>
 </section>
 <section id="ideas">
-<p class="eyebrow">What to build</p>
+<p class="part">Part 3 of 5 · Plan and send</p>
 <h2>Ideas to get you started</h2>
 <div class="grid2">
 <div class="card rise" style="--i:0"><p class="label">Warm-up</p><h3>Guestbook</h3><p class="text">Visitors leave a message for everyone.</p></div>
@@ -387,7 +403,7 @@ th { font-weight: 600; }
 <p class="lead">Or bring a small problem from your own work.</p>
 </section>
 <section id="kickoff" class="dark">
-<p class="eyebrow">Let’s build</p>
+<p class="part">Part 3 of 5 · Plan and send</p>
 <h2>Your turn: plan it, send it</h2>
 <div class="grid2">
 <div class="card rise" style="--i:0"><h3><span style="color:#E8743B">1</span>  Get the starter</h3><p class="text">Open the GitHub link and click “Use this template”.</p></div>
@@ -398,14 +414,14 @@ th { font-weight: 600; }
 <p class="link"><a href="https://github.com/krinya/ai-coding-workshop">github.com/krinya/ai-coding-workshop</a></p>
 </section>
 <section id="cut" class="accent">
-<p class="eyebrow">Sent?</p>
+<p class="part">Part 3 of 5 · Plan and send</p>
 <h1>Press enter.<br>Let it work.</h1>
 <div class="spacer"></div>
 <p class="lead">While your AI builds and checks, we keep going. Peek at your screen now and then: the checkers on the next slides are doing their work right there.</p>
 </section>
 <section id="check-formatter" class="alt">
-<p class="eyebrow">Checker 1 of 4 · Formatter</p>
-<h2>The tidy-up: same layout, every time</h2>
+<p class="part">Part 4 of 5 · While it builds</p>
+<h2>Formatter: same layout, every time</h2>
 <div class="cards">
 <div class="card rise" style="--i:0"><p class="label">Before</p><p class="code">def greet(name:str)-&gt;str :<br>&#160;&#160;&#160;&#160;return "Hello, "+name+"!"<br>items=[ 1,2,<br>&#160;&#160;3 ]</p><p class="text">Works, but every line is spaced differently.</p></div>
 <div class="card hi rise" style="--i:1"><p class="label">After — automatically</p><p class="code">def greet(name: str) -&gt; str:<br>&#160;&#160;&#160;&#160;return "Hello, " + name + "!"<br><br>items = [1, 2, 3]</p><p class="text">Tidied the moment the AI saves the file.</p></div>
@@ -413,8 +429,8 @@ th { font-weight: 600; }
 <p class="lead">Why it matters: when every file looks the same, you see at a glance what actually changed.</p>
 </section>
 <section id="check-linter" class="alt">
-<p class="eyebrow">Checker 2 of 4 · Linter</p>
-<h2>The grammar checker: knows the classic mistakes</h2>
+<p class="part">Part 4 of 5 · While it builds</p>
+<h2>Linter: it knows the classic mistakes</h2>
 <div class="cards">
 <div class="card rise" style="--i:0"><p class="label">The AI wrote</p><p class="code">"SELECT * FROM users<br>&#160;WHERE name = '" + name + "'"</p><p class="text">Look up a user by name. It works, and looks fine.</p></div>
 <div class="card hi rise" style="--i:1"><p class="label">The linter says</p><p class="code">S608 Possible SQL injection</p><p class="text">Someone could type a “name” that rewrites the question — and read everyone’s data.</p></div>
@@ -422,8 +438,8 @@ th { font-weight: 600; }
 <p class="lead">Why it matters: it knows thousands of known mistakes, including security holes nobody spots by reading.</p>
 </section>
 <section id="check-types" class="alt">
-<p class="eyebrow">Checker 3 of 4 · Type checker</p>
-<h2>The plug and socket: does every piece fit?</h2>
+<p class="part">Part 4 of 5 · While it builds</p>
+<h2>Type checker: does every piece fit?</h2>
 <div class="cards">
 <div class="card rise" style="--i:0"><p class="label">The AI wrote</p><p class="code">&lt;Counter start="0" /&gt;</p><p class="text">A click counter that starts at zero.</p></div>
 <div class="card hi rise" style="--i:1"><p class="label">The type checker says</p><p class="code">Type 'string' is not assignable<br>to type 'number'.</p><p class="text">"0" in quotes is text, not a number. Clicking would show 01, 011, 0111 instead of 1, 2, 3.</p></div>
@@ -431,8 +447,8 @@ th { font-weight: 600; }
 <p class="lead">Why it matters: it checks that every piece fits before anything runs — like a plug that only fits the right socket.</p>
 </section>
 <section id="check-tests" class="alt">
-<p class="eyebrow">Checker 4 of 4 · Tests</p>
-<h2>The checklist: “done” written down</h2>
+<p class="part">Part 4 of 5 · While it builds</p>
+<h2>Tests: “done”, written down</h2>
 <div class="cards">
 <div class="card rise" style="--i:0"><p class="label">1 · Write what done means</p><p class="code">greeting for "Ada"<br>→ "Hello, Ada!"</p><p class="text">Before any code exists.</p></div>
 <div class="card rise" style="--i:1"><p class="label">2 · Run it first</p><p class="code">FAILED<br>404 Not Found</p><p class="text">Red: the feature isn’t there yet. Good — the test works.</p></div>
@@ -441,8 +457,8 @@ th { font-weight: 600; }
 <p class="lead">Why it matters: the AI can check its own work against your definition of done.</p>
 </section>
 <section id="real-catch">
-<p class="eyebrow">A real example</p>
-<h2>A mistake, caught in a second</h2>
+<p class="part">Part 4 of 5 · While it builds</p>
+<h2>A real mistake, caught in a second</h2>
 <div class="cards">
 <div class="card rise" style="--i:0"><p class="label">In the kitchen</p><p class="text">The AI renamed one word in the backend.</p><p class="code">database  →  database_up</p></div>
 <div class="card hi rise" style="--i:1"><p class="label">The type checker</p><p class="text">It pointed straight at the dining room.</p><p class="code">Status.tsx, line 9:<br>'database' does not exist</p></div>
@@ -450,7 +466,7 @@ th { font-weight: 600; }
 <p class="lead">Without the checker, the page would quietly say “database down” forever. With it, the AI fixed it before anyone saw it.</p>
 </section>
 <section id="eyes" class="alt">
-<p class="eyebrow">Helping the AI</p>
+<p class="part">Part 4 of 5 · While it builds</p>
 <h2>A rulebook, eyes, and a second opinion</h2>
 <div class="rows">
 <div class="row rise" style="--i:0"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><p class="title">A rulebook</p><p class="text">A handbook the AI reads before every task: how we work in this project.</p></div>
@@ -460,14 +476,14 @@ th { font-weight: 600; }
 </div>
 </section>
 <section id="right-hands" class="dark">
-<p class="eyebrow">In the right hands</p>
+<p class="part">Part 4 of 5 · While it builds</p>
 <h1>What used to take me a year, I now do in 1–3 days.</h1>
 <p class="lead">I’m not joking. And it doesn’t stop when I do: an agent can work around the clock on tasks I define.</p>
 <div class="spacer"></div>
 <p class="muted">The condition: you know what you are doing — the building blocks, the checks, and the plan.</p>
 </section>
 <section id="heading">
-<p class="eyebrow">Where this is heading</p>
+<p class="part">Part 4 of 5 · While it builds</p>
 <h2>Developers set the stage. AI fills in the gaps.</h2>
 <div class="flow">
 <div class="card rise" style="--i:0; padding:32px"><p class="label">You</p><p class="text">Set up the environment: checks, rules, tools.</p></div>
@@ -481,7 +497,7 @@ th { font-weight: 600; }
 <p class="lead">The environment and the plan are the job now. The typing isn’t.</p>
 </section>
 <section id="refine" class="dark">
-<p class="eyebrow">Back to your screens</p>
+<p class="part">Part 5 of 5 · Look and refine</p>
 <h2>Look, try, refine</h2>
 <div class="grid2">
 <div class="card rise" style="--i:0"><h3><span style="color:#E8743B">1</span>  Open your app</h3><p class="text">Try it like a user would. Does it do what you planned?</p></div>
@@ -491,7 +507,7 @@ th { font-weight: 600; }
 </div>
 </section>
 <section id="closing" class="accent">
-<p class="eyebrow">To take home</p>
+<p class="part">Part 5 of 5 · Look and refine</p>
 <h1>The skill is no longer typing code.</h1>
 <p class="lead">It’s setting up the environment, describing exactly what you want — and checking that you got it.</p>
 <div class="spacer"></div>
