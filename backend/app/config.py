@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     environment: str = "development"
     cors_origins: list[str] = ["http://localhost:5173"]
 
+    # PostgreSQL. This is the address from your machine; docker compose overrides it with the
+    # in-network address for the backend container.
+    database_url: str = "postgresql+psycopg://app:app@localhost:5433/app"
+
     # LLM — any OpenAI-compatible endpoint (the lab gateway, OpenAI, ...)
     llm_base_url: str = "https://llm.twinhub.nl/v1"
     llm_api_key: SecretStr | None = None

@@ -34,3 +34,10 @@ data/
 
 # Claude Code personal settings
 .claude/settings.local.json
+
+# Playwright
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/
+.playwright-mcp/
+frontend/coverage/

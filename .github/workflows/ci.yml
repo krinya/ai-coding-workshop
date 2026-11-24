@@ -8,6 +8,20 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: app
+        ports: ["5433:5432"]
+        options: >-
+          --health-cmd "pg_isready -U app -d app"
+          --health-interval 2s --health-timeout 3s --health-retries 15
+    env:
+      # Postgres comes from the service above, so the Makefile skips docker compose for it
+      SKIP_COMPOSE_DB: "1"
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v7
@@ -18,4 +32,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: cd backend && uv sync --frozen
       - run: cd frontend && npm ci --include=dev
+      - run: cd frontend && npx playwright install --with-deps chromium
       - run: make check
+      - name: Generated API types are committed
+        run: git diff --exit-code -- frontend/openapi.json frontend/src/api/schema.d.ts
