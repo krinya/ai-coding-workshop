@@ -17,7 +17,8 @@ feature.
 
 What each building block does, why it is here and how it helps the AI:
 [docs/building-blocks.md](docs/building-blocks.md). Each tool catching a real mistake, with its
-output and the fix: [docs/tool-examples.md](docs/tool-examples.md).
+output and the fix: [docs/tool-examples.md](docs/tool-examples.md). Putting your app on the
+internet (Azure): [docs/deploy-azure.md](docs/deploy-azure.md).
 
 Workshop slides: [docs/slides/](docs/slides/) — [PDF](docs/slides/ai-coding-workshop.pdf),
 [browser version](docs/slides/index.html) (open the file; arrow keys to move, F for full screen),
