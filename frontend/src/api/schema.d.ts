@@ -159,6 +159,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/wall": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Wall */
+        get: operations["wall"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/feedback/{feedback_id}/reactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Toggle Reaction
+         * @description Press once to react, press again to take it back.
+         */
+        post: operations["toggle_reaction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -279,6 +316,32 @@ export interface components {
              */
             created_at: string;
         };
+        /** ReactionCounts */
+        ReactionCounts: {
+            /**
+             * Clap
+             * @default 0
+             */
+            clap: number;
+            /**
+             * Laugh
+             * @default 0
+             */
+            laugh: number;
+            /**
+             * Heart
+             * @default 0
+             */
+            heart: number;
+        };
+        /** ReactionIn */
+        ReactionIn: {
+            /**
+             * Emoji
+             * @enum {string}
+             */
+            emoji: "clap" | "laugh" | "heart";
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -291,6 +354,49 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** Wall */
+        Wall: {
+            /** Average */
+            average: number | null;
+            /** Count */
+            count: number;
+            /** Histogram */
+            histogram: number[];
+            /** Entries */
+            entries: components["schemas"]["WallEntry"][];
+            /** Words */
+            words: components["schemas"]["WordCount"][];
+            /** Join Url */
+            join_url: string;
+        };
+        /** WallEntry */
+        WallEntry: {
+            /** Id */
+            id: number;
+            /** Display Name */
+            display_name: string | null;
+            /** Rating */
+            rating: number;
+            /** Comment */
+            comment: string;
+            /** Photo Url */
+            photo_url: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            reactions: components["schemas"]["ReactionCounts"];
+            /** My Reactions */
+            my_reactions: ("clap" | "laugh" | "heart")[];
+        };
+        /** WordCount */
+        WordCount: {
+            /** Word */
+            word: string;
+            /** Count */
+            count: number;
         };
     };
     responses: never;
@@ -629,6 +735,74 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    wall: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Wall"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    toggle_reaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feedback_id: number;
+            };
+            cookie?: {
+                session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReactionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReactionCounts"];
+                };
             };
             /** @description Validation Error */
             422: {

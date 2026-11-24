@@ -499,6 +499,124 @@
           }
         }
       }
+    },
+    "/api/wall": {
+      "get": {
+        "tags": [
+          "wall"
+        ],
+        "summary": "Wall",
+        "operationId": "wall",
+        "parameters": [
+          {
+            "name": "session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Wall"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/feedback/{feedback_id}/reactions": {
+      "post": {
+        "tags": [
+          "wall"
+        ],
+        "summary": "Toggle Reaction",
+        "description": "Press once to react, press again to take it back.",
+        "operationId": "toggle_reaction",
+        "parameters": [
+          {
+            "name": "feedback_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Feedback Id"
+            }
+          },
+          {
+            "name": "session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReactionIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReactionCounts"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -782,6 +900,45 @@
         "title": "PublicFeedback",
         "description": "What everyone may see. Never add the email here."
       },
+      "ReactionCounts": {
+        "properties": {
+          "clap": {
+            "type": "integer",
+            "title": "Clap",
+            "default": 0
+          },
+          "laugh": {
+            "type": "integer",
+            "title": "Laugh",
+            "default": 0
+          },
+          "heart": {
+            "type": "integer",
+            "title": "Heart",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "ReactionCounts"
+      },
+      "ReactionIn": {
+        "properties": {
+          "emoji": {
+            "type": "string",
+            "enum": [
+              "clap",
+              "laugh",
+              "heart"
+            ],
+            "title": "Emoji"
+          }
+        },
+        "type": "object",
+        "required": [
+          "emoji"
+        ],
+        "title": "ReactionIn"
+      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -821,6 +978,148 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "Wall": {
+        "properties": {
+          "average": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "histogram": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Histogram"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/WallEntry"
+            },
+            "type": "array",
+            "title": "Entries"
+          },
+          "words": {
+            "items": {
+              "$ref": "#/components/schemas/WordCount"
+            },
+            "type": "array",
+            "title": "Words"
+          },
+          "join_url": {
+            "type": "string",
+            "title": "Join Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "average",
+          "count",
+          "histogram",
+          "entries",
+          "words",
+          "join_url"
+        ],
+        "title": "Wall"
+      },
+      "WallEntry": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "rating": {
+            "type": "integer",
+            "title": "Rating"
+          },
+          "comment": {
+            "type": "string",
+            "title": "Comment"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "reactions": {
+            "$ref": "#/components/schemas/ReactionCounts"
+          },
+          "my_reactions": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "clap",
+                "laugh",
+                "heart"
+              ]
+            },
+            "type": "array",
+            "title": "My Reactions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "display_name",
+          "rating",
+          "comment",
+          "photo_url",
+          "created_at",
+          "reactions",
+          "my_reactions"
+        ],
+        "title": "WallEntry"
+      },
+      "WordCount": {
+        "properties": {
+          "word": {
+            "type": "string",
+            "title": "Word"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "word",
+          "count"
+        ],
+        "title": "WordCount"
       }
     }
   }

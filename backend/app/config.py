@@ -51,6 +51,10 @@ class Settings(BaseSettings):
     # Send the session cookie only over HTTPS. Turn on when the site is served over HTTPS.
     cookie_secure: bool = False
 
+    # The address people open on their phones; the wall's QR code links here. For a workshop,
+    # use your laptop's address on the Wi-Fi, e.g. http://192.168.1.20:5173
+    public_url: str = "http://localhost:5173"
+
 
 @lru_cache
 def get_settings() -> Settings:

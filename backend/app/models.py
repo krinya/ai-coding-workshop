@@ -4,7 +4,15 @@
 
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, LargeBinary, String, func
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    LargeBinary,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from app.db import Base
@@ -67,3 +75,15 @@ class Feedback(Base):
     user: Mapped[User] = relationship()
     # True when there is a photo — computed by the database, without loading the photo
     has_photo: Mapped[bool] = column_property(photo.is_not(None))
+
+
+class Reaction(Base):
+    """An emoji reaction to a feedback entry. Each person can give each emoji once."""
+
+    __tablename__ = "reactions"
+    __table_args__ = (UniqueConstraint("feedback_id", "user_id", "emoji"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    feedback_id: Mapped[int] = mapped_column(ForeignKey("feedback.id", ondelete="CASCADE"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    emoji: Mapped[str] = mapped_column(String(10))
