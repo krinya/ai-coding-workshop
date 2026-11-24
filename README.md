@@ -25,15 +25,22 @@ Workshop slides: [docs/slides/](docs/slides/) — [PDF](docs/slides/ai-coding-wo
 
 ## The app on this branch: "Rate this course"
 
-| Page | What it does |
-| --- | --- |
-| <http://localhost:5173> | Sign in with a 6-digit code sent by email (the first sign-in creates the account), then rate the course: stars, a comment and a photo-booth picture with filters |
-| <http://localhost:5173/wall> | The projector page: average, star bars, word cloud, everyone's entries (they pop in), emoji reactions and a QR code to join |
-| <http://localhost:8025> | Mailpit — every email the app sends lands here locally, so you can read your sign-in code |
+| Page | Who | What it does |
+| --- | --- | --- |
+| `/admin` | The host | Sign in with `ADMIN_PASSWORD`, open feedback (a QR code appears), make a new QR code, close it, remove entries |
+| `/wall` | The projector | Average, star bars, word cloud, entries that pop in, emoji reactions. Shows the QR code when this browser is signed in at `/admin` |
+| `/join/…` | Participants | What the QR code opens: pick an optional name, tap Join |
+| `/` | Participants | Rate the course: stars, a comment, a photo-booth picture with filters |
 
-For a real workshop, set `PUBLIC_URL` in `.env` to your laptop's Wi-Fi address (e.g.
-`http://192.168.1.20:5173`) so the QR code works on phones, then `make restart`. Set
-`RESEND_API_KEY` to send real email instead of catching it in Mailpit.
+**Run it locally**: `make up`, then open <http://localhost:5173/admin> (password `admin` — the
+built-in development password works only on localhost), click "Open feedback", and open
+<http://localhost:5173/wall> in the same browser.
+
+**A workshop from your laptop over Wi-Fi**: set `PUBLIC_URL` to your laptop's address
+(e.g. `http://192.168.1.20:5173`) plus a real `SECRET_KEY` and `ADMIN_PASSWORD` in `.env`, then
+`make restart`. Phones on the same Wi-Fi can scan the QR code.
+
+**On the internet**: see [deploy/README.md](deploy/README.md) (Azure Container Apps).
 
 ## Prerequisites
 
@@ -53,7 +60,7 @@ make up        # starts Postgres + backend + frontend in Docker
 - App: <http://localhost:5173>
 - API docs (Swagger): <http://localhost:8000/docs>
 - Health check: <http://localhost:8000/api/health> — shows whether the database is reachable and
-  your LLM and email keys are set
+  your LLM key is set
 - Postgres: `localhost:5433`, user/password/database `app`
 
 Edit a file and the browser (or API) reloads on its own. `make logs` follows the output, `make down`
@@ -70,7 +77,8 @@ Without Docker, in two terminals: `make dev-backend` (starts Postgres in Docker)
 | --- | --- |
 | `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_CHAT_MODEL` | An OpenAI-compatible LLM (default: the workshop gateway) |
 | `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` | Optional, if you bring your own provider |
-| `RESEND_API_KEY`, `EMAIL_FROM` | Sending email via [Resend](https://resend.com) |
+| `SECRET_KEY`, `ADMIN_PASSWORD` | Sign-in; empty means the development defaults, which work only on localhost |
+| `PUBLIC_URL`, `COOKIE_SECURE` | The address the QR code points to, and HTTPS-only cookies when it is `https://` |
 
 After changing `.env`, run `make restart` so the containers pick it up.
 
