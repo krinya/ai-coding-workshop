@@ -2,6 +2,8 @@
 
 import base64
 import io
+import struct
+import zlib
 
 from fastapi.testclient import TestClient
 from PIL import Image
@@ -99,6 +101,26 @@ def test_a_photo_must_be_a_real_image(client: TestClient, outbox: FakeEmailSende
     not_an_image = "data:image/png;base64," + base64.b64encode(b"<script>").decode()
     assert submit(client, photo=not_an_image, photo_consent=True) == 422
     assert submit(client, photo="%%% not base64 %%%", photo_consent=True) == 422
+
+
+def test_a_photo_claiming_gigantic_dimensions_is_rejected(
+    client: TestClient, outbox: FakeEmailSender
+) -> None:
+    """A "decompression bomb": a tiny file whose header claims 30000 x 30000 pixels."""
+    buffer = io.BytesIO()
+    Image.new("1", (1, 1)).save(buffer, format="PNG")
+    png = bytearray(buffer.getvalue())
+    png[16:24] = struct.pack(">II", 30_000, 30_000)  # width and height in the header
+    png[29:33] = struct.pack(">I", zlib.crc32(png[12:29]))  # keep the header checksum valid
+    bomb = "data:image/png;base64," + base64.b64encode(bytes(png)).decode()
+
+    sign_in(client, outbox, ADA)
+    assert submit(client, photo=bomb, photo_consent=True) == 422
+
+
+def test_a_data_url_without_data_is_rejected(client: TestClient, outbox: FakeEmailSender) -> None:
+    sign_in(client, outbox, ADA)
+    assert submit(client, photo="data:image/png", photo_consent=True) == 422
 
 
 def test_a_photo_with_huge_dimensions_is_rejected(

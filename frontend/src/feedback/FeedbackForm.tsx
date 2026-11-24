@@ -36,11 +36,11 @@ export default function FeedbackForm() {
   useEffect(() => {
     // Ignore a late answer from an earlier run of this effect, or it would wipe the form
     let current = true
-    void api.GET('/api/feedback/mine').then(({ data }) => {
-      if (!current) return
-      show(data ?? null)
-      setLoaded(true)
-    })
+    api
+      .GET('/api/feedback/mine')
+      .then(({ data }) => current && show(data ?? null))
+      .catch(() => current && setStatus({ kind: 'error', text: 'Could not load your feedback.' }))
+      .finally(() => current && setLoaded(true))
     return () => {
       current = false
     }

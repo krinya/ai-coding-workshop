@@ -6,8 +6,9 @@ Read it anywhere with `from app.config import settings`.
 
 from functools import lru_cache
 from pathlib import Path
+from typing import Self
 
-from pydantic import SecretStr
+from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -54,6 +55,13 @@ class Settings(BaseSettings):
     # The address people open on their phones; the wall's QR code links here. For a workshop,
     # use your laptop's address on the Wi-Fi, e.g. http://192.168.1.20:5173
     public_url: str = "http://localhost:5173"
+
+    @model_validator(mode="after")
+    def real_secret_outside_development(self) -> Self:
+        default_key = type(self).model_fields["secret_key"].default
+        if self.environment != "development" and self.secret_key == default_key:
+            raise ValueError("Set SECRET_KEY in .env: the built-in one is only for development.")
+        return self
 
 
 @lru_cache

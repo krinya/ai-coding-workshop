@@ -2,16 +2,18 @@
 
 import re
 from collections import Counter
+from pathlib import Path
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import delete, func, select
+from sqlalchemy.exc import IntegrityError
 
 from app.auth import CurrentUser, OptionalUser
 from app.config import settings
 from app.db import SessionDep
-from app.feedback import PublicFeedback, to_public
+from app.feedback import PublicFeedback, newest_first, to_public
 from app.models import Feedback, Reaction
 
 router = APIRouter(tags=["wall"])
@@ -19,145 +21,8 @@ router = APIRouter(tags=["wall"])
 Emoji = Literal["clap", "laugh", "heart"]  # 👏 😂 ❤️ — the frontend draws them
 EMOJIS: tuple[Emoji, ...] = ("clap", "laugh", "heart")
 
-# Words too common to say anything about the course
-STOP_WORDS = set(
-    [
-        "a",
-        "about",
-        "above",
-        "after",
-        "again",
-        "all",
-        "also",
-        "am",
-        "an",
-        "and",
-        "any",
-        "are",
-        "as",
-        "at",
-        "be",
-        "because",
-        "been",
-        "before",
-        "being",
-        "but",
-        "by",
-        "can",
-        "could",
-        "did",
-        "do",
-        "does",
-        "doing",
-        "done",
-        "down",
-        "during",
-        "each",
-        "even",
-        "ever",
-        "every",
-        "few",
-        "for",
-        "from",
-        "get",
-        "got",
-        "had",
-        "has",
-        "have",
-        "having",
-        "he",
-        "her",
-        "here",
-        "hers",
-        "him",
-        "his",
-        "how",
-        "i",
-        "if",
-        "in",
-        "into",
-        "is",
-        "it",
-        "its",
-        "just",
-        "like",
-        "lot",
-        "lots",
-        "made",
-        "make",
-        "many",
-        "me",
-        "more",
-        "most",
-        "much",
-        "my",
-        "no",
-        "nor",
-        "not",
-        "now",
-        "of",
-        "off",
-        "on",
-        "once",
-        "only",
-        "or",
-        "other",
-        "our",
-        "out",
-        "over",
-        "own",
-        "really",
-        "same",
-        "she",
-        "should",
-        "so",
-        "some",
-        "such",
-        "than",
-        "that",
-        "the",
-        "their",
-        "them",
-        "then",
-        "there",
-        "these",
-        "they",
-        "this",
-        "those",
-        "through",
-        "to",
-        "too",
-        "under",
-        "until",
-        "up",
-        "us",
-        "very",
-        "was",
-        "we",
-        "well",
-        "were",
-        "what",
-        "when",
-        "where",
-        "which",
-        "while",
-        "who",
-        "whom",
-        "why",
-        "will",
-        "with",
-        "would",
-        "you",
-        "your",
-        "yours",
-        "yet",
-        "bit",
-        "quite",
-        "still",
-        "thing",
-        "things",
-    ]
-)
+# Words too common to say anything about the course, one per line in stop_words.txt
+STOP_WORDS = set((Path(__file__).parent / "stop_words.txt").read_text().split())
 WORD = re.compile(r"[^\W\d_]+(?:'[^\W\d_]+)?")  # letters, with an optional apostrophe: "don't"
 
 
@@ -169,6 +34,11 @@ class ReactionCounts(BaseModel):
     clap: int = 0
     laugh: int = 0
     heart: int = 0
+
+
+class ReactionState(BaseModel):
+    reactions: ReactionCounts
+    my_reactions: list[Emoji]  # what the person looking has pressed
 
 
 class WallEntry(PublicFeedback):
@@ -202,9 +72,7 @@ def top_words(comments: list[str], limit: int = 30) -> list[WordCount]:
 
 @router.get("/wall")
 def wall(db: SessionDep, viewer: OptionalUser) -> Wall:
-    entries = list(
-        db.scalars(select(Feedback).order_by(Feedback.created_at.desc(), Feedback.id.desc()))
-    )
+    entries = newest_first(db)
 
     counts: dict[int, ReactionCounts] = {entry.id: ReactionCounts() for entry in entries}
     rows = db.execute(
@@ -219,7 +87,7 @@ def wall(db: SessionDep, viewer: OptionalUser) -> Wall:
     mine: dict[int, list[Emoji]] = {}
     if viewer:
         for reaction in db.scalars(select(Reaction).where(Reaction.user_id == viewer.id)):
-            mine.setdefault(reaction.feedback_id, []).append(_emoji(reaction.emoji))
+            mine.setdefault(reaction.feedback_id, []).append(as_emoji(reaction.emoji))
 
     histogram = [0] * 5
     for entry in entries:
@@ -245,7 +113,7 @@ def wall(db: SessionDep, viewer: OptionalUser) -> Wall:
 @router.post("/feedback/{feedback_id}/reactions")
 def toggle_reaction(
     feedback_id: int, body: ReactionIn, db: SessionDep, user: CurrentUser
-) -> ReactionCounts:
+) -> ReactionState:
     """Press once to react, press again to take it back."""
     if db.get(Feedback, feedback_id) is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Feedback not found.")
@@ -256,23 +124,24 @@ def toggle_reaction(
     )
     if db.scalars(select(Reaction).where(*mine)).first():
         db.execute(delete(Reaction).where(*mine))
+        db.commit()
     else:
         db.add(Reaction(feedback_id=feedback_id, user_id=user.id, emoji=body.emoji))
-    db.commit()
+        try:
+            db.commit()
+        except IntegrityError:  # a double click: the first one already added it
+            db.rollback()
 
-    counts = ReactionCounts()
-    for emoji, count in db.execute(
-        select(Reaction.emoji, func.count())
-        .where(Reaction.feedback_id == feedback_id)
-        .group_by(Reaction.emoji)
-    ):
-        setattr(counts, emoji, count)
-    return counts
+    state = ReactionState(reactions=ReactionCounts(), my_reactions=[])
+    for reaction in db.scalars(select(Reaction).where(Reaction.feedback_id == feedback_id)):
+        emoji = as_emoji(reaction.emoji)
+        setattr(state.reactions, emoji, getattr(state.reactions, emoji) + 1)
+        if reaction.user_id == user.id:
+            state.my_reactions.append(emoji)
+    state.my_reactions.sort(key=EMOJIS.index)
+    return state
 
 
-def _emoji(value: str) -> Emoji:
+def as_emoji(value: str) -> Emoji:
     """The database stores plain text; turn it back into one of the known emoji names."""
-    for emoji in EMOJIS:
-        if emoji == value:
-            return emoji
-    raise ValueError(value)
+    return EMOJIS[EMOJIS.index(value)]  # ValueError for anything unknown

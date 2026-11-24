@@ -98,7 +98,7 @@ describe('Wall', () => {
   it('lets a signed-in user react', async () => {
     backend({ signedIn: true })
     vi.mocked(api.POST).mockResolvedValue({
-      data: { clap: 3, laugh: 0, heart: 1 },
+      data: { reactions: { clap: 3, laugh: 0, heart: 1 }, my_reactions: ['clap'] },
       response: new Response(),
     } as never)
     render(<Wall />)

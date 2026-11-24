@@ -156,3 +156,13 @@ def test_sign_out_ends_the_session(client: TestClient, outbox: FakeEmailSender) 
 
 def test_invalid_email_is_rejected(client: TestClient) -> None:
     assert request_code(client, "not-an-email") == 422
+
+
+def test_a_failed_email_is_reported_and_not_counted(
+    client: TestClient, outbox: FakeEmailSender
+) -> None:
+    outbox.broken = True
+    assert request_code(client) == 503
+    outbox.broken = False
+    for _ in range(3):
+        assert request_code(client) == 200  # the failed one did not use up the limit

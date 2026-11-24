@@ -23,6 +23,10 @@ class Email:
     text: str
 
 
+class EmailNotSentError(Exception):
+    """The email could not be sent (mail server down, wrong key, ...)."""
+
+
 class EmailSender(Protocol):
     def send(self, email: Email) -> None: ...
 
@@ -34,8 +38,11 @@ class SmtpEmailSender:
         message["To"] = email.to
         message["Subject"] = email.subject
         message.set_content(email.text)
-        with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=10) as smtp:
-            smtp.send_message(message)
+        try:
+            with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=10) as smtp:
+                smtp.send_message(message)
+        except (OSError, smtplib.SMTPException) as error:
+            raise EmailNotSentError from error
 
 
 class ResendEmailSender:
@@ -43,18 +50,21 @@ class ResendEmailSender:
         self.api_key = api_key
 
     def send(self, email: Email) -> None:
-        response = httpx.post(
-            "https://api.resend.com/emails",
-            headers={"Authorization": f"Bearer {self.api_key}"},
-            json={
-                "from": settings.email_from,
-                "to": [email.to],
-                "subject": email.subject,
-                "text": email.text,
-            },
-            timeout=10,
-        )
-        response.raise_for_status()
+        try:
+            response = httpx.post(
+                "https://api.resend.com/emails",
+                headers={"Authorization": f"Bearer {self.api_key}"},
+                json={
+                    "from": settings.email_from,
+                    "to": [email.to],
+                    "subject": email.subject,
+                    "text": email.text,
+                },
+                timeout=10,
+            )
+            response.raise_for_status()
+        except httpx.HTTPError as error:
+            raise EmailNotSentError from error
 
 
 def get_email_sender() -> EmailSender:

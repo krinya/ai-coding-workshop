@@ -25,7 +25,7 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.db import get_session
-from app.mailer import Email, get_email_sender
+from app.mailer import Email, EmailNotSentError, get_email_sender
 from app.main import app
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
@@ -77,8 +77,11 @@ class FakeEmailSender:
 
     def __init__(self) -> None:
         self.sent: list[Email] = []
+        self.broken = False  # set to True to act like a mail server that is down
 
     def send(self, email: Email) -> None:
+        if self.broken:
+            raise EmailNotSentError
         self.sent.append(email)
 
     def last_code(self) -> str:

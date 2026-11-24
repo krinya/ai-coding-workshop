@@ -23,6 +23,18 @@ Workshop slides: [docs/slides/](docs/slides/) — [PDF](docs/slides/ai-coding-wo
 [browser version](docs/slides/index.html) (open the file; arrow keys to move, F for full screen),
 [speaker notes](docs/slides/speaker-notes.md).
 
+## The app on this branch: "Rate this course"
+
+| Page | What it does |
+| --- | --- |
+| <http://localhost:5173> | Sign in with a 6-digit code sent by email (the first sign-in creates the account), then rate the course: stars, a comment and a photo-booth picture with filters |
+| <http://localhost:5173/wall> | The projector page: average, star bars, word cloud, everyone's entries (they pop in), emoji reactions and a QR code to join |
+| <http://localhost:8025> | Mailpit — every email the app sends lands here locally, so you can read your sign-in code |
+
+For a real workshop, set `PUBLIC_URL` in `.env` to your laptop's Wi-Fi address (e.g.
+`http://192.168.1.20:5173`) so the QR code works on phones, then `make restart`. Set
+`RESEND_API_KEY` to send real email instead of catching it in Mailpit.
+
 ## Prerequisites
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) — enough to run the stack

@@ -10,11 +10,14 @@ from fastapi import APIRouter, HTTPException, Response, status
 from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel, Field, StringConstraints
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session, joinedload
 
 from app.auth import CurrentUser
 from app.db import SessionDep
 from app.models import Feedback
 
+ALREADY_SENT = "You already sent feedback — edit it instead."
 MAX_PHOTO_SIDE = 640
 MAX_PHOTO_UPLOAD = 3_000_000  # characters of base64, about 2 MB of image
 MAX_PHOTO_PIXELS = 25_000_000  # e.g. 5000 x 5000
@@ -90,7 +93,7 @@ def to_jpeg(photo: str) -> bytes:
 
     Re-encoding proves it really is an image and drops hidden metadata such as GPS location.
     """
-    data = photo.split(",", 1)[1] if photo.startswith("data:") else photo
+    data = photo.partition(",")[2] if photo.startswith("data:") else photo
     try:
         upload = Image.open(io.BytesIO(base64.b64decode(data, validate=True)))
         if upload.format not in {"JPEG", "PNG", "WEBP"}:
@@ -100,7 +103,13 @@ def to_jpeg(photo: str) -> bytes:
             raise ValueError("too many pixels")
         image = upload.convert("RGB")
         image.thumbnail((MAX_PHOTO_SIDE, MAX_PHOTO_SIDE))
-    except (binascii.Error, UnidentifiedImageError, ValueError, OSError) as error:
+    except (
+        binascii.Error,
+        UnidentifiedImageError,
+        Image.DecompressionBombError,  # Pillow's own guard against gigantic pictures
+        ValueError,
+        OSError,
+    ) as error:
         raise HTTPException(
             status.HTTP_422_UNPROCESSABLE_CONTENT, "The photo must be a JPEG, PNG or WebP picture."
         ) from error
@@ -119,6 +128,16 @@ def apply(entry: Feedback, body: FeedbackIn) -> None:
         entry.photo = to_jpeg(body.photo)
 
 
+def newest_first(db: Session) -> list[Feedback]:
+    """All entries, newest first, with their users loaded in the same query."""
+    query = (
+        select(Feedback)
+        .options(joinedload(Feedback.user))
+        .order_by(Feedback.created_at.desc(), Feedback.id.desc())
+    )
+    return list(db.scalars(query))
+
+
 def own_entry(db: SessionDep, user: CurrentUser, feedback_id: int) -> Feedback:
     entry = db.get(Feedback, feedback_id)
     if entry is None:
@@ -133,8 +152,7 @@ def own_entry(db: SessionDep, user: CurrentUser, feedback_id: int) -> Feedback:
 
 @router.get("")
 def list_feedback(db: SessionDep) -> list[PublicFeedback]:
-    entries = db.scalars(select(Feedback).order_by(Feedback.created_at.desc(), Feedback.id.desc()))
-    return [to_public(entry) for entry in entries]
+    return [to_public(entry) for entry in newest_first(db)]
 
 
 @router.get("/mine")
@@ -146,13 +164,15 @@ def my_feedback(db: SessionDep, user: CurrentUser) -> MyFeedback | None:
 @router.post("", status_code=status.HTTP_201_CREATED)
 def submit_feedback(body: FeedbackIn, db: SessionDep, user: CurrentUser) -> MyFeedback:
     if db.scalars(select(Feedback).where(Feedback.user_id == user.id)).first():
-        raise HTTPException(
-            status.HTTP_409_CONFLICT, "You already sent feedback — edit it instead."
-        )
+        raise HTTPException(status.HTTP_409_CONFLICT, ALREADY_SENT)
     entry = Feedback(user_id=user.id)
     apply(entry, body)
     db.add(entry)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as error:  # a double click: the first request already saved it
+        db.rollback()
+        raise HTTPException(status.HTTP_409_CONFLICT, ALREADY_SENT) from error
     return to_mine(entry)
 
 

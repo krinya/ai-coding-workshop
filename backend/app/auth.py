@@ -20,7 +20,7 @@ from sqlalchemy import delete, func, select
 
 from app.config import settings
 from app.db import SessionDep
-from app.mailer import Email, EmailSenderDep
+from app.mailer import Email, EmailNotSentError, EmailSenderDep
 from app.models import LoginCode, User, UserSession
 
 CODE_LIFETIME = timedelta(minutes=10)
@@ -123,15 +123,21 @@ def request_code(body: CodeRequest, db: SessionDep, mailer: EmailSenderDep) -> M
             expires_at=now() + CODE_LIFETIME,
         )
     )
-    db.commit()
-    mailer.send(
-        Email(
-            to=email,
-            subject=f"Your sign-in code: {code}",
-            text=f"Your code is {code}\n\nIt works once, for 10 minutes. "
-            "If you did not ask for it, ignore this email.",
+    try:
+        mailer.send(
+            Email(
+                to=email,
+                subject=f"Your sign-in code: {code}",
+                text=f"Your code is {code}\n\nIt works once, for 10 minutes. "
+                "If you did not ask for it, ignore this email.",
+            )
         )
-    )
+    except EmailNotSentError as error:
+        db.rollback()  # a code that never arrived should not count toward the limit
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE, "We could not send the email. Try again soon."
+        ) from error
+    db.commit()
     # The same answer for every address, so nobody can probe who has an account
     return Message(detail="We sent a 6-digit code to that address.")
 
@@ -143,6 +149,9 @@ def verify_code(body: CodeVerification, db: SessionDep, response: Response) -> M
         select(LoginCode)
         .where(LoginCode.email == email, LoginCode.used.is_(False))
         .order_by(LoginCode.created_at.desc())
+        # Lock the row: simultaneous guesses wait their turn, so each one counts toward the
+        # 5-tries limit, and one code can never sign in twice
+        .with_for_update()
     ).first()
     if login is None or login.expires_at <= now() or login.wrong_tries >= MAX_WRONG_TRIES:
         raise HTTPException(

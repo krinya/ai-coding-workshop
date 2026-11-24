@@ -68,6 +68,11 @@ def test_word_cloud_counts_words_and_skips_common_ones(
     assert not {"the", "and", "is", "were"} & {w["word"] for w in words}
 
 
+def test_word_cloud_skips_contractions() -> None:
+    words = {w.word for w in top_words(["It's great, don't change it. I'm happy!"])}
+    assert words == {"great", "change", "happy"}
+
+
 def test_top_words_ignores_short_words_and_limits_the_list() -> None:
     comments = ["ok AI " + " ".join("x" * length for length in range(3, 20))]  # xxx, xxxx, ...
     words = top_words(comments, limit=10)
@@ -95,6 +100,13 @@ def test_reactions_are_counted_and_toggle(client: TestClient, outbox: FakeEmailS
     assert entry["reactions"] == {"clap": 2, "laugh": 0, "heart": 1}
     assert entry["my_reactions"] == ["clap"]
 
+    response = client.post(url, json={"emoji": "heart"})  # bob adds a heart
+    assert response.json() == {
+        "reactions": {"clap": 2, "laugh": 0, "heart": 2},
+        "my_reactions": ["clap", "heart"],
+    }
+
+    client.post(url, json={"emoji": "heart"})
     client.post(url, json={"emoji": "clap"})  # pressing again takes it back
     entry = client.get("/api/wall").json()["entries"][0]
     assert entry["reactions"]["clap"] == 1

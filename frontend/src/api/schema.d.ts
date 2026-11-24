@@ -342,6 +342,12 @@ export interface components {
              */
             emoji: "clap" | "laugh" | "heart";
         };
+        /** ReactionState */
+        ReactionState: {
+            reactions: components["schemas"]["ReactionCounts"];
+            /** My Reactions */
+            my_reactions: ("clap" | "laugh" | "heart")[];
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -801,7 +807,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ReactionCounts"];
+                    "application/json": components["schemas"]["ReactionState"];
                 };
             };
             /** @description Validation Error */

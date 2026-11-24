@@ -600,7 +600,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReactionCounts"
+                  "$ref": "#/components/schemas/ReactionState"
                 }
               }
             }
@@ -938,6 +938,31 @@
           "emoji"
         ],
         "title": "ReactionIn"
+      },
+      "ReactionState": {
+        "properties": {
+          "reactions": {
+            "$ref": "#/components/schemas/ReactionCounts"
+          },
+          "my_reactions": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "clap",
+                "laugh",
+                "heart"
+              ]
+            },
+            "type": "array",
+            "title": "My Reactions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reactions",
+          "my_reactions"
+        ],
+        "title": "ReactionState"
       },
       "ValidationError": {
         "properties": {

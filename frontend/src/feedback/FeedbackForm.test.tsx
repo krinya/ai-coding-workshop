@@ -93,4 +93,10 @@ describe('FeedbackForm', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Send feedback' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('already sent feedback')
   })
+
+  it('says so when your feedback cannot be loaded', async () => {
+    vi.mocked(api.GET).mockRejectedValue(new TypeError('Failed to fetch'))
+    render(<FeedbackForm />)
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load your feedback.')
+  })
 })

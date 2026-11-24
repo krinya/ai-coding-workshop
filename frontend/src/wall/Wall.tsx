@@ -38,21 +38,13 @@ export default function Wall() {
       body: { emoji },
     })
     if (error) return setError(errorText(error))
-    // Show the new counts right away instead of waiting for the next refresh
+    // Show the server's answer right away instead of waiting for the next refresh
     setWall(
       (old) =>
         old && {
           ...old,
           entries: old.entries.map((entry) =>
-            entry.id !== feedbackId
-              ? entry
-              : {
-                  ...entry,
-                  reactions: data,
-                  my_reactions: entry.my_reactions.includes(emoji)
-                    ? entry.my_reactions.filter((mine) => mine !== emoji)
-                    : [...entry.my_reactions, emoji],
-                },
+            entry.id === feedbackId ? { ...entry, ...data } : entry,
           ),
         },
     )
