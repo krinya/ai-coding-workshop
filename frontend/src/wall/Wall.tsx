@@ -101,8 +101,15 @@ export default function Wall() {
               <p className="text-xl leading-snug font-bold">Scan to rate the course</p>
             </section>
           ) : (
-            <section className="rounded-3xl bg-white/5 p-6 text-center text-xl text-slate-300 ring-1 ring-white/10">
-              Feedback is closed
+            <section className="rounded-3xl bg-white/5 p-6 text-center ring-1 ring-white/10">
+              <p className="text-xl text-slate-300">
+                {wall.feedback_open ? 'Feedback is open' : 'Feedback is closed'}
+              </p>
+              {wall.feedback_open && (
+                <p className="mt-2 hidden text-sm text-slate-500 lg:block">
+                  Host: sign in at /admin in this browser to show the QR code here.
+                </p>
+              )}
             </section>
           )}
         </aside>
@@ -123,7 +130,7 @@ export default function Wall() {
 
           {wall.entries.length === 0 ? (
             <p className="py-20 text-center text-2xl text-slate-400">
-              No feedback yet{wall.join_url ? ' — scan the QR code and be the first!' : '.'}
+              No feedback yet{wall.feedback_open ? ' — scan the QR code and be the first!' : '.'}
             </p>
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] sm:gap-6">

@@ -72,3 +72,6 @@ def test_the_admin_can_remove_any_entry(client: TestClient, be: Be) -> None:
     assert client.delete(f"/api/admin/feedback/{entry_id}").status_code == 204
     assert client.get("/api/wall").json()["entries"] == []
     assert client.delete(f"/api/admin/feedback/{entry_id}").status_code == 404
+
+    be("Ada")  # her old session cookie
+    assert client.get("/api/auth/me").status_code == 401  # removing also signs the author out

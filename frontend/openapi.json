@@ -788,6 +788,7 @@
           "admin"
         ],
         "summary": "Remove Feedback",
+        "description": "Remove an entry from the wall, and sign its author out so they cannot post again\nright away (they can rejoin only while the QR code is up).",
         "operationId": "remove_feedback",
         "parameters": [
           {
@@ -1127,7 +1128,7 @@
           "created_at"
         ],
         "title": "PublicFeedback",
-        "description": "What everyone may see. Never add the email here."
+        "description": "What everyone may see. Never add anything that identifies a person beyond their chosen\ndisplay name."
       },
       "ReactionCounts": {
         "properties": {
@@ -1271,6 +1272,10 @@
             "type": "array",
             "title": "Words"
           },
+          "feedback_open": {
+            "type": "boolean",
+            "title": "Feedback Open"
+          },
           "join_url": {
             "anyOf": [
               {
@@ -1290,6 +1295,7 @@
           "histogram",
           "entries",
           "words",
+          "feedback_open",
           "join_url"
         ],
         "title": "Wall"

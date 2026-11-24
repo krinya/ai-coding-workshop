@@ -1,6 +1,10 @@
 // Shared steps for the browser tests.
 import { expect, request, type Page } from '@playwright/test'
 
+import type { components } from '../src/api/schema.d.ts'
+
+type JoinLinkStatus = components['schemas']['JoinLinkStatus']
+
 // The backend's ADMIN_PASSWORD (the development default is "admin")
 export const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? 'admin'
 
@@ -10,12 +14,11 @@ export async function openFeedback(): Promise<string> {
   expect((await host.post('/api/auth/admin', { data: { password: ADMIN_PASSWORD } })).ok()).toBe(
     true,
   )
-  let status = (await (await host.get('/api/admin/join-link')).json()) as {
-    join_url: string | null
-  }
+  let status: JoinLinkStatus = await (await host.get('/api/admin/join-link')).json()
   if (!status.join_url) status = await (await host.post('/api/admin/join-link')).json()
   await host.dispose()
-  return new URL(status.join_url!).pathname
+  if (!status.join_url) throw new Error('Could not open feedback')
+  return new URL(status.join_url).pathname
 }
 
 // "Scan" the QR code as a new person

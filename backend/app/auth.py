@@ -11,11 +11,12 @@ Use the signed-in user in a route:
 
 import hashlib
 import hmac
+import logging
 import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field, StringConstraints
 from sqlalchemy import delete, func, select
 
@@ -25,6 +26,13 @@ from app.models import JoinLink, User, UserSession
 
 MAX_JOINS_PER_LINK = 300  # stops one person from creating endless accounts with an open link
 SESSION_LIFETIME = timedelta(days=30)
+ADMIN_SESSION_LIFETIME = timedelta(hours=12)
+# Wrong admin passwords: after this many from one address, that address waits a while
+ADMIN_MAX_FAILURES = 10
+ADMIN_LOCKOUT = timedelta(minutes=15)
+failed_admin_sign_ins: dict[str, list[datetime]] = {}  # per address; kept in memory
+
+logger = logging.getLogger(__name__)
 COOKIE_NAME = "session"
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -40,11 +48,11 @@ def hash_secret(value: str) -> str:
     return hmac.new(key, value.encode(), hashlib.sha256).hexdigest()
 
 
-def open_join_link(db: SessionDep) -> JoinLink | None:
-    """The link in the QR code right now, or None while feedback is closed."""
-    return db.scalars(
-        select(JoinLink).where(JoinLink.closed_at.is_(None)).order_by(JoinLink.id.desc())
-    ).first()
+def open_join_link(db: SessionDep, *, lock: bool = False) -> JoinLink | None:
+    """The link in the QR code right now, or None while feedback is closed.
+    With `lock`, other requests wait until this one is done with the link."""
+    query = select(JoinLink).where(JoinLink.closed_at.is_(None)).order_by(JoinLink.id.desc())
+    return db.scalars(query.with_for_update() if lock else query).first()
 
 
 def join_url(link: JoinLink | None) -> str | None:
@@ -115,19 +123,17 @@ CurrentUser = Annotated[User, Depends(current_user)]
 AdminUser = Annotated[User, Depends(admin_user)]
 
 
-def start_session(db: SessionDep, response: Response, user: User) -> None:
+def start_session(
+    db: SessionDep, response: Response, user: User, lifetime: timedelta = SESSION_LIFETIME
+) -> None:
     """Remember this browser: a random token in an httpOnly cookie, only its hash in the DB."""
     token = secrets.token_urlsafe(32)
-    db.add(
-        UserSession(
-            token_hash=hash_secret(token), user_id=user.id, expires_at=now() + SESSION_LIFETIME
-        )
-    )
+    db.add(UserSession(token_hash=hash_secret(token), user_id=user.id, expires_at=now() + lifetime))
     db.commit()
     response.set_cookie(
         COOKIE_NAME,
         token,
-        max_age=int(SESSION_LIFETIME.total_seconds()),
+        max_age=int(lifetime.total_seconds()),
         httponly=True,  # JavaScript cannot read it
         samesite="lax",  # other sites cannot send it with their forms
         secure=settings.cookie_secure,
@@ -140,8 +146,9 @@ def start_session(db: SessionDep, response: Response, user: User) -> None:
 @router.post("/join")
 def join(body: JoinRequest, db: SessionDep, response: Response, viewer: OptionalUser) -> Me:
     """Opening the QR code's link. The first time it creates your account."""
-    link = open_join_link(db)
-    if link is None or not hmac.compare_digest(link.token, body.token):
+    # Locked, so people joining at the same moment are counted one after the other
+    link = open_join_link(db, lock=True)
+    if link is None or not hmac.compare_digest(link.token.encode(), body.token.encode()):
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
             "This QR code is not active any more. Scan the one on the screen.",
@@ -162,16 +169,27 @@ def join(body: JoinRequest, db: SessionDep, response: Response, viewer: Optional
 
 
 @router.post("/admin")
-def admin_sign_in(body: AdminSignIn, db: SessionDep, response: Response) -> Me:
+def admin_sign_in(body: AdminSignIn, db: SessionDep, request: Request, response: Response) -> Me:
+    address = request.client.host if request.client else "unknown"
+    recent = [
+        time for time in failed_admin_sign_ins.get(address, []) if time > now() - ADMIN_LOCKOUT
+    ]
+    failed_admin_sign_ins[address] = recent
+    if len(recent) >= ADMIN_MAX_FAILURES:
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS, "Too many wrong passwords. Try again later."
+        )
     expected = settings.admin_password.get_secret_value()
     if not hmac.compare_digest(body.password.encode(), expected.encode()):
+        recent.append(now())
+        logger.warning("Wrong admin password from %s", address)
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Wrong password.")
     admin = db.scalars(select(User).where(User.is_admin)).first()
     if admin is None:
         admin = User(display_name="Host", is_admin=True)
         db.add(admin)
         db.flush()
-    start_session(db, response, admin)
+    start_session(db, response, admin, ADMIN_SESSION_LIFETIME)
     return to_me(admin)
 
 

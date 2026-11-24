@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from app import admin, auth, feedback, wall
 from app.config import settings
 from app.db import database_is_up
+from app.frontend import serve_frontend
 
 
 def operation_id(route: APIRoute) -> str:
@@ -51,3 +52,6 @@ api.include_router(feedback.router)
 api.include_router(wall.router)
 api.include_router(admin.router)
 app.include_router(api)
+
+if settings.static_dir is not None:
+    serve_frontend(app, settings.static_dir)  # after the API, so /api routes win

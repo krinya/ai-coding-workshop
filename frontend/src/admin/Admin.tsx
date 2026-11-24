@@ -27,7 +27,11 @@ export default function Admin() {
   useEffect(() => {
     if (!isAdmin) return
     let current = true
-    void api.GET('/api/admin/join-link').then(({ data }) => current && data && setStatus(data))
+    void api.GET('/api/admin/join-link').then(({ data, error }) => {
+      if (!current) return
+      if (error) return setIsAdmin(false) // e.g. the 12-hour host session ran out: sign in again
+      setStatus(data)
+    })
     void api.GET('/api/feedback').then(({ data }) => current && data && setEntries(data))
     return () => {
       current = false

@@ -45,6 +45,10 @@ def test_an_unknown_link_does_not_work(client: TestClient, open_link: JoinLink) 
     assert client.get("/api/auth/me").status_code == 401
 
 
+def test_a_strange_token_is_simply_not_found(client: TestClient, open_link: JoinLink) -> None:
+    assert join(client, "é🙂") == 404
+
+
 def test_a_closed_link_does_not_work(client: TestClient, db: Session, open_link: JoinLink) -> None:
     open_link.closed_at = auth.now()
     db.flush()
@@ -103,3 +107,17 @@ def test_admin_sign_in_twice_is_the_same_admin(client: TestClient, db: Session) 
     client.post("/api/auth/admin", json={"password": password})
     client.post("/api/auth/admin", json={"password": password})
     assert db.scalar(select(func.count()).select_from(User).where(User.is_admin)) == 1
+
+
+def test_admin_sessions_are_short(client: TestClient) -> None:
+    password = settings.admin_password.get_secret_value()
+    response = client.post("/api/auth/admin", json={"password": password})
+    assert "max-age=43200" in response.headers["set-cookie"].lower()  # 12 hours
+
+
+def test_guessing_the_admin_password_gets_blocked(client: TestClient) -> None:
+    for _ in range(10):
+        assert client.post("/api/auth/admin", json={"password": "guess"}).status_code == 401
+    password = settings.admin_password.get_secret_value()
+    # Blocked for a while, even with the right password
+    assert client.post("/api/auth/admin", json={"password": password}).status_code == 429

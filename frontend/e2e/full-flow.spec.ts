@@ -28,7 +28,9 @@ test('join by QR code, send feedback with a photo, see it on the wall and react'
   await expect(card.getByText(comment)).toBeVisible()
   await expect(card.getByLabel('5 out of 5 stars')).toBeVisible()
   await expect(card.getByRole('img', { name })).toBeVisible()
-  await expect(page.getByRole('img', { name: 'QR code to join' })).toBeVisible()
+  // A participant never gets the join link; only the host's screen shows the QR code
+  await expect(page.getByText('Feedback is open')).toBeVisible()
+  await expect(page.getByRole('img', { name: 'QR code to join' })).toHaveCount(0)
 
   // Signed in, so reactions work
   await card.getByRole('button', { name: '👏 0' }).click()

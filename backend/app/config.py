@@ -7,6 +7,7 @@ Read it anywhere with `from app.config import settings`.
 from functools import lru_cache
 from pathlib import Path
 from typing import Self
+from urllib.parse import urlparse
 
 from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -51,16 +52,27 @@ class Settings(BaseSettings):
     # use your laptop's address on the Wi-Fi, e.g. http://192.168.1.20:5173
     public_url: str = "http://localhost:5173"
 
+    # Folder with the built frontend (`npm run build`). Set in the cloud image; locally Vite
+    # serves the frontend instead.
+    static_dir: Path | None = None
+
     @model_validator(mode="after")
-    def real_secrets_outside_development(self) -> Self:
-        if self.environment == "development":
+    def real_secrets_when_online(self) -> Self:
+        """The built-in secrets are fine on your own computer, nowhere else. Checked whenever the
+        app is not in development on localhost, so forgetting ENVIRONMENT cannot open it up."""
+        on_my_computer = self.environment == "development" and urlparse(
+            self.public_url
+        ).hostname in {"localhost", "127.0.0.1"}
+        if on_my_computer:
             return self
         defaults = type(self).model_fields
         if self.secret_key == defaults["secret_key"].default:
-            raise ValueError("Set SECRET_KEY: the built-in one is only for development.")
+            raise ValueError("Set SECRET_KEY: the built-in one only works on localhost.")
         password = self.admin_password.get_secret_value()
         if self.admin_password == defaults["admin_password"].default or len(password) < 16:
             raise ValueError("Set ADMIN_PASSWORD to a long random string (16+ characters).")
+        if self.public_url.startswith("https://") and not self.cookie_secure:
+            raise ValueError("Set COOKIE_SECURE=true: the site uses HTTPS.")
         return self
 
 

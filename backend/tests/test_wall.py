@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from app.config import settings
 from app.models import JoinLink
 from app.wall import top_words
-from tests.conftest import Be
+from tests.conftest import Be, sign_in_as_admin
 
 
 def give_feedback(client: TestClient, be: Be, name: str, rating: int, comment: str = "") -> int:
@@ -51,12 +51,30 @@ def test_entries_show_names_but_never_emails(client: TestClient, be: Be) -> None
 
 
 def test_no_qr_code_while_feedback_is_closed(client: TestClient) -> None:
-    assert client.get("/api/wall").json()["join_url"] is None
+    sign_in_as_admin(client)
+    wall = client.get("/api/wall").json()
+    assert wall["feedback_open"] is False
+    assert wall["join_url"] is None
 
 
-def test_qr_code_links_to_the_open_join_link(client: TestClient, open_link: JoinLink) -> None:
-    join_url = client.get("/api/wall").json()["join_url"]
-    assert join_url == f"{settings.public_url}/join/{open_link.token}"
+def test_the_host_screen_gets_the_qr_code(client: TestClient, open_link: JoinLink) -> None:
+    sign_in_as_admin(client)
+    wall = client.get("/api/wall").json()
+    assert wall["feedback_open"] is True
+    assert wall["join_url"] == f"{settings.public_url}/join/{open_link.token}"
+
+
+def test_everyone_else_never_sees_the_join_link(
+    client: TestClient, be: Be, open_link: JoinLink
+) -> None:
+    """Otherwise anyone on the internet could read the link and join (or use up its places)."""
+    client.cookies.clear()
+    response = client.get("/api/wall")
+    assert response.json()["feedback_open"] is True
+    assert response.json()["join_url"] is None
+    assert open_link.token not in response.text
+    be("Ada")
+    assert open_link.token not in client.get("/api/wall").text
 
 
 def test_word_cloud_counts_words_and_skips_common_ones(client: TestClient, be: Be) -> None:

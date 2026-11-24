@@ -49,7 +49,8 @@ class MyFeedback(BaseModel):
 
 
 class PublicFeedback(BaseModel):
-    """What everyone may see. Never add the email here."""
+    """What everyone may see. Never add anything that identifies a person beyond their chosen
+    display name."""
 
     id: int
     display_name: str | None

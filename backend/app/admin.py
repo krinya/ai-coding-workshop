@@ -4,11 +4,11 @@ import secrets
 
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 
 from app.auth import AdminUser, join_url, now, open_join_link
 from app.db import SessionDep
-from app.models import Feedback, JoinLink, User
+from app.models import Feedback, JoinLink, User, UserSession
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -56,8 +56,12 @@ def close_feedback(db: SessionDep, admin: AdminUser) -> JoinLinkStatus:
 
 @router.delete("/feedback/{feedback_id}", status_code=status.HTTP_204_NO_CONTENT)
 def remove_feedback(feedback_id: int, db: SessionDep, admin: AdminUser) -> None:
+    """Remove an entry from the wall, and sign its author out so they cannot post again
+    right away (they can rejoin only while the QR code is up)."""
     entry = db.get(Feedback, feedback_id)
     if entry is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Feedback not found.")
+    if not entry.user.is_admin:
+        db.execute(delete(UserSession).where(UserSession.user_id == entry.user_id))
     db.delete(entry)
     db.commit()

@@ -234,7 +234,11 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Remove Feedback */
+        /**
+         * Remove Feedback
+         * @description Remove an entry from the wall, and sign its author out so they cannot post again
+         *     right away (they can rejoin only while the QR code is up).
+         */
         delete: operations["remove_feedback"];
         options?: never;
         head?: never;
@@ -339,7 +343,8 @@ export interface components {
         };
         /**
          * PublicFeedback
-         * @description What everyone may see. Never add the email here.
+         * @description What everyone may see. Never add anything that identifies a person beyond their chosen
+         *     display name.
          */
         PublicFeedback: {
             /** Id */
@@ -415,6 +420,8 @@ export interface components {
             entries: components["schemas"]["WallEntry"][];
             /** Words */
             words: components["schemas"]["WordCount"][];
+            /** Feedback Open */
+            feedback_open: boolean;
             /** Join Url */
             join_url: string | null;
         };

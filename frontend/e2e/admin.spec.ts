@@ -22,6 +22,14 @@ test('the host opens, renews and closes the QR code', async ({ page, context }) 
   await visitor.getByRole('button', { name: 'Join' }).click()
   await expect(visitor.getByRole('alert')).toContainText('not active any more')
 
+  // The host's wall shows the QR code; a visitor's wall does not
+  await page.goto('/wall')
+  await expect(page.getByRole('img', { name: 'QR code to join' })).toBeVisible()
+  await visitor.goto('/wall')
+  await expect(visitor.getByText('Feedback is open')).toBeVisible()
+  await expect(visitor.getByRole('img', { name: 'QR code to join' })).toHaveCount(0)
+  await page.goto('/admin')
+
   // Close: the wall takes the QR code down
   await page.getByRole('button', { name: 'Close feedback' }).click()
   await expect(page.getByText('Feedback is closed')).toBeVisible()

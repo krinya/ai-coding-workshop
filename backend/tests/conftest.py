@@ -23,6 +23,7 @@ from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.engine import URL, make_url
 from sqlalchemy.orm import Session
 
+from app import auth
 from app.auth import now
 from app.config import settings
 from app.db import get_session
@@ -71,6 +72,12 @@ def db(engine: Engine) -> Iterator[Session]:
         yield session
         session.close()
         transaction.rollback()
+
+
+@pytest.fixture(autouse=True)
+def forget_failed_admin_sign_ins() -> None:
+    """The admin lockout lives in memory; start every test without earlier wrong guesses."""
+    auth.failed_admin_sign_ins.clear()
 
 
 @pytest.fixture

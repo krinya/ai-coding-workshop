@@ -56,7 +56,10 @@ class Wall(BaseModel):
     histogram: list[int]  # how many gave 1, 2, 3, 4 and 5 stars
     entries: list[WallEntry]
     words: list[WordCount]
-    join_url: str | None  # for the QR code; None while feedback is closed
+    feedback_open: bool
+    # The link in the QR code. Only for the host's screen (signed in at /admin): anyone who
+    # has it can join, so it must not be readable by everyone who opens the wall.
+    join_url: str | None
 
 
 def top_words(comments: list[str], limit: int = 30) -> list[WordCount]:
@@ -72,6 +75,7 @@ def top_words(comments: list[str], limit: int = 30) -> list[WordCount]:
 @router.get("/wall")
 def wall(db: SessionDep, viewer: OptionalUser) -> Wall:
     entries = newest_first(db)
+    link = open_join_link(db)
 
     counts: dict[int, ReactionCounts] = {entry.id: ReactionCounts() for entry in entries}
     rows = db.execute(
@@ -105,7 +109,8 @@ def wall(db: SessionDep, viewer: OptionalUser) -> Wall:
             for entry in entries
         ],
         words=top_words([entry.comment for entry in entries]),
-        join_url=join_url(open_join_link(db)),
+        feedback_open=link is not None,
+        join_url=join_url(link) if viewer and viewer.is_admin else None,
     )
 
 
