@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Coding Workshop — slides</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root {
+  --dark: #14213D;
+  --dark-2: #1F2E52;
+  --paper: #F7F5F0;
+  --paper-2: #ECE7DC;
+  --card: #FDFCF9;
+  --orange: #E8743B;
+  --orange-ink: #B4501C;
+  --muted: #4A5568;
+  --muted-dark: #B8C2D6;
+}
+
+body {
+  font-family: 'Inter', Arial, sans-serif;
+  color: #14213D;
+}
+
+section {
+  padding: 128px;
+  background: #F7F5F0;
+  color: #14213D;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  box-sizing: border-box;
+}
+
+section.alt { background: #ECE7DC; }
+section.dark { background: #14213D; color: #F7F5F0; }
+section.accent { background: #E8743B; color: #14213D; }
+
+h1, h2, h3 {
+  font-family: 'Space Grotesk', Arial, sans-serif;
+  margin: 0;
+}
+h1 { font-size: 120px; font-weight: 700; line-height: 1.04; letter-spacing: -2px; }
+h2 { font-size: 72px; font-weight: 700; line-height: 1.1; letter-spacing: -1px; }
+h3 { font-size: 44px; font-weight: 600; line-height: 1.15; }
+
+p { margin: 0; font-size: 32px; line-height: 1.4; }
+
+.eyebrow {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #B4501C;
+}
+.dark .eyebrow { color: #E8743B; }
+.accent .eyebrow { color: #14213D; }
+
+.lead { font-size: 44px; line-height: 1.3; color: #4A5568; }
+.dark .lead { color: #B8C2D6; }
+.accent .lead { color: #14213D; }
+
+.muted { color: #4A5568; }
+.dark .muted { color: #B8C2D6; }
+
+.spacer { flex: 1; }
+
+/* Cards */
+.cards { display: flex; gap: 32px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.grid2 .card { padding: 32px; gap: 12px; }
+.card {
+  flex: 1;
+  background: #FDFCF9;
+  border-radius: 24px;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-sizing: border-box;
+}
+.dark .card { background: #1F2E52; }
+.card.hi { border: 4px solid #E8743B; }
+.card .label {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #B4501C;
+}
+.dark .card .label { color: #E8743B; }
+.card .text { font-size: 32px; line-height: 1.4; color: #4A5568; }
+.dark .card .text { color: #B8C2D6; }
+.card .icon { width: 56px; height: 56px; color: #B4501C; }
+.dark .card .icon { color: #E8743B; }
+
+.card ul { margin: 0; padding-left: 36px; font-size: 32px; line-height: 1.4; color: #4A5568; }
+.card li { margin-bottom: 12px; }
+
+/* Flow diagrams */
+.flow { display: flex; align-items: center; gap: 16px; }
+.flow .card { align-self: stretch; }
+.arrow { width: 56px; height: 36px; background: #E8743B; flex: none; }
+.step-num {
+  font-family: 'Space Grotesk', Arial, sans-serif;
+  font-size: 44px;
+  font-weight: 700;
+  color: #E8743B;
+}
+
+/* Rows with an icon */
+.rows { display: flex; flex-direction: column; gap: 28px; }
+.row { display: flex; align-items: center; gap: 32px; }
+.row .icon { width: 56px; height: 56px; color: #B4501C; flex: none; }
+.row .title { width: 520px; flex: none; font-size: 32px; font-weight: 600; }
+.row .text { flex: 1; font-size: 32px; line-height: 1.4; color: #4A5568; }
+
+/* Code */
+.code {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 28px;
+  line-height: 1.5;
+  background: #14213D;
+  color: #F7F5F0;
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+/* Tables */
+table { font-size: 32px; color: #14213D; width: 100%; }
+.dark table { color: #F7F5F0; }
+thead, tr.head { background: #ECE7DC; }
+.alt tr.head { background: #FDFCF9; }
+
+.link { font-size: 32px; font-weight: 600; color: #B4501C; }
+.dark .link { color: #E8743B; }
+.accent .link { color: #14213D; }
+
+/* Arrival motion: the plain rules above are the finished look */
+.rise { animation: rise 600ms ease-out both; animation-delay: calc(var(--i, 0) * 120ms); }
+@keyframes rise {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Standalone viewer ── */
+html, body { margin: 0; background: #0B1324; }
+section { width: 1920px; height: 1080px; position: relative; overflow: hidden; }
+svg.arrow { background: none; width: 56px; height: 36px; flex: none; }
+a { color: inherit; }
+table { border-collapse: collapse; }
+th, td { padding: 0.35em 0.6em; text-align: left; vertical-align: top; border-bottom: 1px solid rgba(20, 33, 61, 0.15); line-height: 1.35; }
+th { font-weight: 600; }
+.deck section { display: none; position: absolute; top: 0; left: 0; transform-origin: 0 0; }
+.deck section.on { display: flex; }
+.counter { position: fixed; right: 16px; bottom: 12px; font: 14px Inter, Arial, sans-serif; color: #B8C2D6; }
+@media print {
+  @page { size: 1920px 1080px; margin: 0; }
+  html, body { background: none; }
+  .deck section { display: flex !important; position: relative; transform: none !important; break-after: page; }
+  .counter { display: none; }
+  .rise { animation: none; }
+}
+</style>
+</head>
+<body>
+<!-- Exported from the Slides artifact. Arrow keys, space or click to move; F for full screen. -->
+<div class="deck">
+<section id="cover" class="dark" data-transition="fade">
+<p class="eyebrow">Hands-on workshop</p>
+<h1>Building a web app<br>with AI</h1>
+<p class="lead">No coding experience needed — just curiosity.</p>
+<div class="spacer"></div>
+<div class="cards" style="justify-content:space-between">
+<p class="muted">Kristof</p>
+<p class="link" style="text-align:right"><a href="https://github.com/krinya/ai-coding-workshop">github.com/krinya/ai-coding-workshop</a></p>
+</div>
+</section>
+<section id="gap">
+<p class="eyebrow">What I see</p>
+<h2>Some people build working software with AI every day. Others don’t know it’s possible.</h2>
+<div class="spacer"></div>
+<div class="cards">
+<div class="card rise" style="--i:0"><p class="label">Never tried</p><p class="text">“AI? I’ve heard of it. Not sure what I’d use it for.”</p></div>
+<div class="card rise" style="--i:1"><p class="label">Asks questions</p><p class="text">“I use it like a smarter search engine.”</p></div>
+<div class="card hi rise" style="--i:2"><p class="label">Builds with it</p><p class="text">“It made me a tool for my team last week.”</p></div>
+</div>
+<p class="lead">The gap isn’t talent. It’s knowing what’s possible — and how to work with it.</p>
+</section>
+<section id="three-ways" class="alt">
+<p class="eyebrow">Three ways to use AI</p>
+<h2>From asking questions to building together</h2>
+<div class="cards">
+<div class="card rise" style="--i:0"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg><h3>Ask</h3><p class="text">You ask, it answers. Useful, but you still do all the work.</p></div>
+<div class="card rise" style="--i:1"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg><h3>Copy &amp; paste</h3><p class="text">It writes code in the chat. You copy it somewhere and hope it works.</p></div>
+<div class="card hi rise" style="--i:2"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg><h3>Build together</h3><p class="text">It works inside your project: writes the files, runs them, checks its own work and fixes its mistakes.</p></div>
+</div>
+<p class="lead">Today we practise the third.</p>
+</section>
+<section id="idea" class="accent">
+<p class="eyebrow">The idea</p>
+<h1>Let’s build a real web app — together, with AI.</h1>
+<div class="spacer"></div>
+<p class="lead">You describe what you want. The AI builds it. We check that it really works.</p>
+</section>
+<section id="agenda">
+<p class="eyebrow">Today</p>
+<h2>The plan</h2>
+<table>
+<tr class="head"><th style="width:32%">Part</th><th>What happens</th></tr>
+<tr><td>Why AI coding</td><td>What’s possible today, and why it matters to you</td></tr>
+<tr><td>The starter kit</td><td>What I prepared, and why it makes the AI better</td></tr>
+<tr><td>Build</td><td>You describe a feature, the AI builds and checks it</td></tr>
+<tr><td>Show &amp; tell</td><td>What did you make? What surprised you?</td></tr>
+</table>
+</section>
+<section id="just-ask" class="alt">
+<p class="eyebrow">The building blocks</p>
+<h2>You could just ask Claude to “make me an app”. So why a starter kit?</h2>
+<div class="cards">
+<div class="card rise" style="--i:0">
+<h3>Just asking</h3>
+<ul>
+<li>It works — the first time</li>
+<li>Each change can break something else</li>
+<li>Mistakes stay hidden until a user finds them</li>
+<li>The AI can’t tell that it broke something</li>
+</ul>
+</div>
+<div class="card hi rise" style="--i:1">
+<h3>With the starter kit</h3>
+<ul>
+<li>Just as fast</li>
+<li>Every change is checked in seconds</li>
+<li>Mistakes are named: which file, which line</li>
+<li>The AI reads the error and fixes it itself</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="house" class="dark">
+<p class="eyebrow">An analogy</p>
+<h2>Don’t start in an empty field.</h2>
+<p class="lead">Start on a plot that already has foundations, plumbing and electricity — and a building inspector who checks every wall the moment it goes up.</p>
+<div class="spacer"></div>
+<div class="cards">
+<div class="card rise" style="--i:0"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><p class="text">Foundations: the app already runs</p></div>
+<div class="card rise" style="--i:1"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><p class="text">Utilities: database, AI, email ready to connect</p></div>
+<div class="card rise" style="--i:2"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg><p class="text">Inspector: automatic checks on every change</p></div>
+</div>
+</section>
+<section id="restaurant">
+<p class="eyebrow">What a web app is made of</p>
+<h2>Like a restaurant: three rooms</h2>
+<div class="flow">
+<div class="card rise" style="--i:0"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg><h3>Dining room</h3><p class="label">Frontend</p><p class="text">The page you see and click in the browser.</p></div>
+<svg class="arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 36" aria-hidden="true"><polygon points="0,11 32,11 32,0 56,18 32,36 32,25 0,25" fill="#E8743B"/></svg>
+<div class="card rise" style="--i:1"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg><h3>Kitchen</h3><p class="label">Backend</p><p class="text">Where the work happens, and where the secrets (API keys) stay.</p></div>
+<svg class="arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 36" aria-hidden="true"><polygon points="0,11 32,11 32,0 56,18 32,36 32,25 0,25" fill="#E8743B"/></svg>
+<div class="card rise" style="--i:2"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg><h3>Pantry</h3><p class="label">Database</p><p class="text">Where things are stored, so they’re still there tomorrow.</p></div>
+</div>
+<p class="lead">The AI and the email service are suppliers: only the kitchen calls them.</p>
+</section>
+<section id="docker" class="alt">
+<p class="eyebrow">Docker</p>
+<h2>A shipping container for software</h2>
+<p class="lead">Before shipping containers, every port loaded cargo its own way. Docker packs the app and everything it needs into one standard box.</p>
+<p class="muted">So the restaurant opens the same way on every laptop — yours, mine, and the server’s.</p>
+<div class="cards">
+<div class="card rise" style="--i:0"><p class="label">Works everywhere</p><p class="text">No more “but it works on my laptop”.</p></div>
+<div class="card rise" style="--i:1"><p class="label">Nothing to install</p><p class="text">Docker brings the right version of everything.</p></div>
+<div class="card rise" style="--i:2"><p class="label">One command</p><p class="text"><b>make up</b> opens all three rooms.</p></div>
+</div>
+</section>
+<section id="safety-net">
+<p class="eyebrow">The safety net</p>
+<h2>Four checkers that never get tired</h2>
+<div class="grid2">
+<div class="card rise" style="--i:0"><p class="label">Formatter</p><h3>The tidy-up</h3><p class="text">Puts every space and line break in its place, like auto-format in Word.</p></div>
+<div class="card rise" style="--i:1"><p class="label">Linter</p><h3>The grammar checker</h3><p class="text">Knows the classic mistakes — security holes too — and points at them.</p></div>
+<div class="card rise" style="--i:2"><p class="label">Type checker</p><h3>The plug and socket</h3><p class="text">Checks that every piece fits what it connects to, before anything runs.</p></div>
+<div class="card rise" style="--i:3"><p class="label">Tests</p><h3>The checklist</h3><p class="text">Clicks through the app like a user and proves it does what you asked.</p></div>
+</div>
+</section>
+<section id="check-formatter" class="alt">
+<p class="eyebrow">Checker 1 of 4 · Formatter</p>
+<h2>The tidy-up: same layout, every time</h2>
+<div class="cards">
+<div class="card rise" style="--i:0"><p class="label">Before</p><p class="code">def greet(name:str)-&gt;str :<br>&#160;&#160;&#160;&#160;return "Hello, "+name+"!"<br>items=[ 1,2,<br>&#160;&#160;3 ]</p><p class="text">Works, but every line is spaced differently.</p></div>
+<div class="card hi rise" style="--i:1"><p class="label">After — automatically</p><p class="code">def greet(name: str) -&gt; str:<br>&#160;&#160;&#160;&#160;return "Hello, " + name + "!"<br><br>items = [1, 2, 3]</p><p class="text">Tidied the moment the AI saves the file.</p></div>
+</div>
+<p class="lead">Why it matters: when every file looks the same, you see at a glance what actually changed.</p>
+</section>
+<section id="check-linter" class="alt">
+<p class="eyebrow">Checker 2 of 4 · Linter</p>
+<h2>The grammar checker: knows the classic mistakes</h2>
+<div class="cards">
+<div class="card rise" style="--i:0"><p class="label">The AI wrote</p><p class="code">"SELECT * FROM users<br>&#160;WHERE name = '" + name + "'"</p><p class="text">Look up a user by name. It works, and looks fine.</p></div>
+<div class="card hi rise" style="--i:1"><p class="label">The linter says</p><p class="code">S608 Possible SQL injection</p><p class="text">Someone could type a “name” that rewrites the question — and read everyone’s data.</p></div>
+</div>
+<p class="lead">Why it matters: it knows thousands of known mistakes, including security holes nobody spots by reading.</p>
+</section>
+<section id="check-types" class="alt">
+<p class="eyebrow">Checker 3 of 4 · Type checker</p>
+<h2>The plug and socket: does every piece fit?</h2>
+<div class="cards">
+<div class="card rise" style="--i:0"><p class="label">The AI wrote</p><p class="code">&lt;Counter start="0" /&gt;</p><p class="text">A click counter that starts at zero.</p></div>
+<div class="card hi rise" style="--i:1"><p class="label">The type checker says</p><p class="code">Type 'string' is not assignable<br>to type 'number'.</p><p class="text">"0" in quotes is text, not a number. Clicking would show 01, 011, 0111 instead of 1, 2, 3.</p></div>
+</div>
+<p class="lead">Why it matters: it checks that every piece fits before anything runs — like a plug that only fits the right socket.</p>
+</section>
+<section id="check-tests" class="alt">
+<p class="eyebrow">Checker 4 of 4 · Tests</p>
+<h2>The checklist: “done” written down</h2>
+<div class="cards">
+<div class="card rise" style="--i:0"><p class="label">1 · Write what done means</p><p class="code">greeting for "Ada"<br>→ "Hello, Ada!"</p><p class="text">Before any code exists.</p></div>
+<div class="card rise" style="--i:1"><p class="label">2 · Run it first</p><p class="code">FAILED<br>404 Not Found</p><p class="text">Red: the feature isn’t there yet. Good — the test works.</p></div>
+<div class="card hi rise" style="--i:2"><p class="label">3 · AI builds until green</p><p class="code">PASSED</p><p class="text">And the test stays, guarding the feature from now on.</p></div>
+</div>
+<p class="lead">Why it matters: the AI can check its own work against your definition of done.</p>
+</section>
+<section id="loop" class="dark">
+<p class="eyebrow">How it fits together</p>
+<h2>The AI works inside the safety net</h2>
+<div class="flow">
+<div class="card rise" style="--i:0; padding:32px"><p class="step-num">1</p><p class="text">You describe what you want</p></div>
+<svg class="arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 36" aria-hidden="true"><polygon points="0,11 32,11 32,0 56,18 32,36 32,25 0,25" fill="#E8743B"/></svg>
+<div class="card rise" style="--i:1; padding:32px"><p class="step-num">2</p><p class="text">The AI writes the code</p></div>
+<svg class="arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 36" aria-hidden="true"><polygon points="0,11 32,11 32,0 56,18 32,36 32,25 0,25" fill="#E8743B"/></svg>
+<div class="card rise" style="--i:2; padding:32px"><p class="step-num">3</p><p class="text">The checkers run, in seconds</p></div>
+<svg class="arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 36" aria-hidden="true"><polygon points="0,11 32,11 32,0 56,18 32,36 32,25 0,25" fill="#E8743B"/></svg>
+<div class="card hi rise" style="--i:3; padding:32px"><p class="step-num">4</p><p class="text">The AI reads what they found and fixes it</p></div>
+</div>
+<p class="lead">Steps 2 to 4 repeat by themselves until every check passes.</p>
+<p class="muted">Then the AI opens the page to look at it, a second AI reviews the changes, and you decide.</p>
+</section>
+<section id="real-catch">
+<p class="eyebrow">A real example</p>
+<h2>A mistake, caught in a second</h2>
+<div class="cards">
+<div class="card rise" style="--i:0"><p class="label">In the kitchen</p><p class="text">The AI renamed one word in the backend.</p><p class="code">database  →  database_up</p></div>
+<div class="card hi rise" style="--i:1"><p class="label">The type checker</p><p class="text">It pointed straight at the dining room.</p><p class="code">Status.tsx, line 9:<br>'database' does not exist</p></div>
+</div>
+<p class="lead">Without the checker, the page would quietly say “database down” forever. With it, the AI fixed it before anyone saw it.</p>
+</section>
+<section id="eyes" class="alt">
+<p class="eyebrow">Helping the AI</p>
+<h2>A rulebook, eyes, and a second opinion</h2>
+<div class="rows">
+<div class="row rise" style="--i:0"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><p class="title">A rulebook</p><p class="text">A handbook the AI reads before every task: how we work in this project.</p></div>
+<div class="row rise" style="--i:1"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><p class="title">Eyes</p><p class="text">It opens the app in a real browser, clicks around and takes screenshots.</p></div>
+<div class="row rise" style="--i:2"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><p class="title">A second opinion</p><p class="text">A fresh AI reviews the changes, without the first one’s assumptions.</p></div>
+<div class="row rise" style="--i:3"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><p class="title">A safe for keys</p><p class="text">Passwords and API keys stay on your laptop; the AI may not read them.</p></div>
+</div>
+</section>
+<section id="compare">
+<p class="eyebrow">Side by side</p>
+<h2>Just asking vs. the starter kit</h2>
+<table>
+<tr class="head"><th style="width:26%"></th><th style="width:37%">Just asking</th><th>With the starter kit</th></tr>
+<tr><td>Getting started</td><td>Minutes</td><td>Minutes — already set up</td></tr>
+<tr><td>A small change</td><td>May break something, unnoticed</td><td>Checked within seconds</td></tr>
+<tr><td>Finding a mistake</td><td>When a user complains</td><td>Right away, with file and line</td></tr>
+<tr><td>Who fixes it</td><td>You, describing the symptom</td><td>The AI, reading the error</td></tr>
+<tr><td>Passwords and keys</td><td>Easily end up in the code</td><td>Kept in a locked file</td></tr>
+<tr><td>Working as a team</td><td>“It works on my laptop”</td><td>Same on every laptop</td></tr>
+</table>
+</section>
+<section id="how-we-work" class="dark">
+<p class="eyebrow">Let’s build</p>
+<h2>How we work today</h2>
+<div class="grid2">
+<div class="card rise" style="--i:0"><h3><span style="color:#E8743B">1</span>  Get the starter</h3><p class="text">Open the GitHub link and click “Use this template”.</p></div>
+<div class="card rise" style="--i:1"><h3><span style="color:#E8743B">2</span>  Describe a feature</h3><p class="text">In plain words: what should someone be able to do?</p></div>
+<div class="card rise" style="--i:2"><h3><span style="color:#E8743B">3</span>  Let the AI build and check</h3><p class="text">It writes, runs the checks, and fixes until all is green.</p></div>
+<div class="card rise" style="--i:3"><h3><span style="color:#E8743B">4</span>  Look and refine</h3><p class="text">Open the page, try it, and ask for changes.</p></div>
+</div>
+<p class="link"><a href="https://github.com/krinya/ai-coding-workshop">github.com/krinya/ai-coding-workshop</a></p>
+</section>
+<section id="prompts" class="alt">
+<p class="eyebrow">Describing what you want</p>
+<h2>Small changes in wording, big difference</h2>
+<table>
+<tr class="head"><th style="width:32%">Instead of…</th><th>Try…</th></tr>
+<tr><td>“Make me a notes app.”</td><td>“A page where I can add notes and tick them off. Write the tests first, then make them pass.”</td></tr>
+<tr><td>“It’s broken.”</td><td>“The check fails — fix the first error.”</td></tr>
+<tr><td>“Make it nicer.”</td><td>“Open the page, take a screenshot, and make it look good on a phone.”</td></tr>
+<tr><td>“Looks good, done.”</td><td>“Ask the reviewer to look at the changes first.”</td></tr>
+</table>
+</section>
+<section id="ideas">
+<p class="eyebrow">What to build</p>
+<h2>Ideas to get you started</h2>
+<div class="grid2">
+<div class="card rise" style="--i:0"><p class="label">Warm-up</p><h3>Guestbook</h3><p class="text">Visitors leave a message for everyone.</p></div>
+<div class="card rise" style="--i:1"><p class="label">Medium</p><h3>Quiz maker</h3><p class="text">The AI writes questions; you play them.</p></div>
+<div class="card rise" style="--i:2"><p class="label">Medium</p><h3>Meeting notes</h3><p class="text">Jot notes; the AI summarises them.</p></div>
+<div class="card hi rise" style="--i:3"><p class="label">Stretch</p><h3>Weekly digest</h3><p class="text">Collect items, email a weekly summary.</p></div>
+</div>
+<p class="lead">Or bring a small problem from your own work.</p>
+</section>
+<section id="closing" class="accent">
+<p class="eyebrow">To take home</p>
+<h1>The skill is no longer typing code.</h1>
+<p class="lead">It’s describing what you want — and knowing how to check that you got it.</p>
+<div class="spacer"></div>
+<p class="link"><a href="https://github.com/krinya/ai-coding-workshop">github.com/krinya/ai-coding-workshop</a></p>
+</section>
+</div>
+<p class="counter"></p>
+<script>
+const slides = [...document.querySelectorAll('.deck section')];
+const counter = document.querySelector('.counter');
+let i = Math.max(0, Math.min(slides.length - 1, parseInt(location.hash.slice(1)) - 1 || 0));
+function fit() {
+  const k = Math.min(innerWidth / 1920, innerHeight / 1080);
+  for (const s of slides) {
+    s.style.transform = `translate(${(innerWidth - 1920 * k) / 2}px, ${(innerHeight - 1080 * k) / 2}px) scale(${k})`;
+  }
+}
+function show(n) {
+  i = Math.max(0, Math.min(slides.length - 1, n));
+  slides.forEach((s, j) => s.classList.toggle('on', j === i));
+  counter.textContent = `${i + 1} / ${slides.length}`;
+  history.replaceState(null, '', `#${i + 1}`);
+}
+addEventListener('keydown', (e) => {
+  if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) show(i + 1);
+  if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) show(i - 1);
+  if (e.key === 'Home') show(0);
+  if (e.key === 'End') show(slides.length - 1);
+  if (e.key === 'f') document.documentElement.requestFullscreen?.();
+});
+addEventListener('click', (e) => { if (!e.target.closest('a')) show(i + (e.clientX < innerWidth / 3 ? -1 : 1)); });
+addEventListener('resize', fit);
+fit(); show(i);
+</script>
+</body>
+</html>

@@ -19,6 +19,10 @@ What each building block does, why it is here and how it helps the AI:
 [docs/building-blocks.md](docs/building-blocks.md). Each tool catching a real mistake, with its
 output and the fix: [docs/tool-examples.md](docs/tool-examples.md).
 
+Workshop slides: [docs/slides/](docs/slides/) — [PDF](docs/slides/ai-coding-workshop.pdf),
+[browser version](docs/slides/index.html) (open the file; arrow keys to move, F for full screen),
+[speaker notes](docs/slides/speaker-notes.md).
+
 ## Prerequisites
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) — enough to run the stack
