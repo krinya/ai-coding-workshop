@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
+from app import auth
 from app.config import settings
 from app.db import database_is_up
 
@@ -47,4 +48,5 @@ def health() -> Health:
     )
 
 
+api.include_router(auth.router)
 app.include_router(api)

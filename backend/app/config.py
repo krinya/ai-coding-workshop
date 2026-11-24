@@ -39,9 +39,17 @@ class Settings(BaseSettings):
     openai_api_key: SecretStr | None = None
     anthropic_api_key: SecretStr | None = None
 
-    # Email — Resend (https://resend.com)
+    # Email — sent through Resend (https://resend.com) when RESEND_API_KEY is set, otherwise
+    # over SMTP to Mailpit, which catches every email locally (inbox: http://localhost:8025)
     resend_api_key: SecretStr | None = None
     email_from: str = "Workshop <onboarding@resend.dev>"
+    smtp_host: str = "localhost"
+    smtp_port: int = 1025
+
+    # Sign-in. The secret key makes the stored login-code hashes useless without it.
+    secret_key: SecretStr = SecretStr("dev-only-secret-change-me")
+    # Send the session cookie only over HTTPS. Turn on when the site is served over HTTPS.
+    cookie_secure: bool = False
 
 
 @lru_cache

@@ -11,6 +11,7 @@ Use them by naming them as arguments:
         assert client.get("/api/notes").json() == [...]
 """
 
+import re
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -24,6 +25,7 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.db import get_session
+from app.mailer import Email, get_email_sender
 from app.main import app
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
@@ -70,10 +72,31 @@ def db(engine: Engine) -> Iterator[Session]:
         transaction.rollback()
 
 
+class FakeEmailSender:
+    """Keeps emails in a list instead of sending them, so tests never send real email."""
+
+    def __init__(self) -> None:
+        self.sent: list[Email] = []
+
+    def send(self, email: Email) -> None:
+        self.sent.append(email)
+
+    def last_code(self) -> str:
+        match = re.search(r"\b\d{6}\b", self.sent[-1].text)
+        assert match, "the last email has no 6-digit code"
+        return match.group()
+
+
 @pytest.fixture
-def client(db: Session) -> Iterator[TestClient]:
-    """An HTTP client for the app whose routes use the test session above."""
+def outbox() -> FakeEmailSender:
+    return FakeEmailSender()
+
+
+@pytest.fixture
+def client(db: Session, outbox: FakeEmailSender) -> Iterator[TestClient]:
+    """An HTTP client for the app whose routes use the test session and the fake email sender."""
     app.dependency_overrides[get_session] = lambda: db
+    app.dependency_overrides[get_email_sender] = lambda: outbox
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()

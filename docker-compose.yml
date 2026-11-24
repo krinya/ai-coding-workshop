@@ -19,6 +19,13 @@ services:
       timeout: 3s
       retries: 15
 
+  # Catches every email the backend sends: SMTP on 1025, inbox at http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "${MAILPIT_WEB_PORT:-8025}:8025"
+
   backend:
     build: ./backend
     # Apply pending migrations, then serve with reload
@@ -28,6 +35,8 @@ services:
         required: false
     environment:
       DATABASE_URL: postgresql+psycopg://app:app@db:5432/app
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
@@ -35,6 +44,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
       interval: 5s
