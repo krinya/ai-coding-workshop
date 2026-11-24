@@ -23,22 +23,41 @@
         }
       }
     },
-    "/api/auth/request-code": {
+    "/api/auth/join": {
       "post": {
         "tags": [
           "auth"
         ],
-        "summary": "Request Code",
-        "operationId": "request_code",
+        "summary": "Join",
+        "description": "Opening the QR code's link. The first time it creates your account.",
+        "operationId": "join",
+        "parameters": [
+          {
+            "name": "session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CodeRequest"
+                "$ref": "#/components/schemas/JoinRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -46,7 +65,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Message"
+                  "$ref": "#/components/schemas/Me"
                 }
               }
             }
@@ -64,18 +83,18 @@
         }
       }
     },
-    "/api/auth/verify-code": {
+    "/api/auth/admin": {
       "post": {
         "tags": [
           "auth"
         ],
-        "summary": "Verify Code",
-        "operationId": "verify_code",
+        "summary": "Admin Sign In",
+        "operationId": "admin_sign_in",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CodeVerification"
+                "$ref": "#/components/schemas/AdminSignIn"
               }
             }
           },
@@ -617,55 +636,219 @@
           }
         }
       }
+    },
+    "/api/admin/join-link": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get Join Link",
+        "operationId": "get_join_link",
+        "parameters": [
+          {
+            "name": "session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinLinkStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Open Feedback",
+        "description": "Show a QR code with a brand-new link (the old link stops working).",
+        "operationId": "open_feedback",
+        "parameters": [
+          {
+            "name": "session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinLinkStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Close Feedback",
+        "description": "Take the QR code down. People who already joined can still edit their feedback.",
+        "operationId": "close_feedback",
+        "parameters": [
+          {
+            "name": "session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinLinkStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/feedback/{feedback_id}": {
+      "delete": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Remove Feedback",
+        "operationId": "remove_feedback",
+        "parameters": [
+          {
+            "name": "feedback_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Feedback Id"
+            }
+          },
+          {
+            "name": "session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
-      "CodeRequest": {
+      "AdminSignIn": {
         "properties": {
-          "email": {
+          "password": {
             "type": "string",
-            "format": "email",
-            "title": "Email"
+            "maxLength": 200,
+            "title": "Password"
           }
         },
         "type": "object",
         "required": [
-          "email"
+          "password"
         ],
-        "title": "CodeRequest"
-      },
-      "CodeVerification": {
-        "properties": {
-          "email": {
-            "type": "string",
-            "format": "email",
-            "title": "Email"
-          },
-          "code": {
-            "type": "string",
-            "pattern": "^\\d{6}$",
-            "title": "Code"
-          },
-          "display_name": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 50
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Display Name"
-          }
-        },
-        "type": "object",
-        "required": [
-          "email",
-          "code"
-        ],
-        "title": "CodeVerification"
+        "title": "AdminSignIn"
       },
       "FeedbackIn": {
         "properties": {
@@ -740,10 +923,6 @@
           "llm_configured": {
             "type": "boolean",
             "title": "Llm Configured"
-          },
-          "email_configured": {
-            "type": "boolean",
-            "title": "Email Configured"
           }
         },
         "type": "object",
@@ -751,20 +930,66 @@
           "status",
           "environment",
           "database",
-          "llm_configured",
-          "email_configured"
+          "llm_configured"
         ],
         "title": "Health"
+      },
+      "JoinLinkStatus": {
+        "properties": {
+          "join_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Join Url"
+          },
+          "joined": {
+            "type": "integer",
+            "title": "Joined"
+          }
+        },
+        "type": "object",
+        "required": [
+          "join_url",
+          "joined"
+        ],
+        "title": "JoinLinkStatus"
+      },
+      "JoinRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Token"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "JoinRequest"
       },
       "Me": {
         "properties": {
           "id": {
             "type": "integer",
             "title": "Id"
-          },
-          "email": {
-            "type": "string",
-            "title": "Email"
           },
           "display_name": {
             "anyOf": [
@@ -776,13 +1001,17 @@
               }
             ],
             "title": "Display Name"
+          },
+          "is_admin": {
+            "type": "boolean",
+            "title": "Is Admin"
           }
         },
         "type": "object",
         "required": [
           "id",
-          "email",
-          "display_name"
+          "display_name",
+          "is_admin"
         ],
         "title": "Me"
       },
@@ -1043,7 +1272,14 @@
             "title": "Words"
           },
           "join_url": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Join Url"
           }
         },

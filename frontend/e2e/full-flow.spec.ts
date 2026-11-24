@@ -1,18 +1,19 @@
-// The whole story: sign in with a code from Mailpit, send feedback with a photo, see it on /wall.
+// The whole story: scan the QR code, send feedback with a photo, see it on /wall.
 import { fileURLToPath } from 'node:url'
 
 import { expect, test } from '@playwright/test'
 
-import { signIn, uniqueEmail } from './helpers.ts'
+import { join } from './helpers.ts'
 
 const TEST_PHOTO = fileURLToPath(new URL('./fixtures/test-photo.png', import.meta.url))
 
-test('sign in, send feedback with a photo, see it on the wall and react', async ({ page }) => {
-  const email = uniqueEmail('flow')
+test('join by QR code, send feedback with a photo, see it on the wall and react', async ({
+  page,
+}) => {
   const name = `Tester ${Date.now() % 100000}`
   const comment = `Fantastic workshop ${Date.now()}`
 
-  await signIn(page, email, name)
+  await join(page, name)
   await page.getByRole('radio', { name: '5 stars' }).check({ force: true })
   await page.getByLabel('Comment').fill(comment)
   await page.getByLabel('Upload a picture').setInputFiles(TEST_PHOTO)
@@ -27,8 +28,7 @@ test('sign in, send feedback with a photo, see it on the wall and react', async 
   await expect(card.getByText(comment)).toBeVisible()
   await expect(card.getByLabel('5 out of 5 stars')).toBeVisible()
   await expect(card.getByRole('img', { name })).toBeVisible()
-  await expect(page.getByRole('img', { name: 'QR code to the sign-in page' })).toBeVisible()
-  await expect(page.getByText(email)).toHaveCount(0) // emails are never shown
+  await expect(page.getByRole('img', { name: 'QR code to join' })).toBeVisible()
 
   // Signed in, so reactions work
   await card.getByRole('button', { name: '👏 0' }).click()

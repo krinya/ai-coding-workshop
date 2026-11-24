@@ -38,14 +38,20 @@ const wall: WallData = {
     { word: 'demos', count: 3 },
     { word: 'brilliant', count: 1 },
   ],
-  join_url: 'http://192.168.1.20:5173',
+  join_url: 'https://rate.example/join/abc123',
 }
 
-function backend({ signedIn }: { signedIn: boolean }) {
+function backend({
+  signedIn,
+  joinUrl = wall.join_url,
+}: {
+  signedIn: boolean
+  joinUrl?: string | null
+}) {
   vi.mocked(api.GET).mockImplementation(((path: string) =>
     Promise.resolve(
       path === '/api/wall'
-        ? { data: wall, response: new Response() }
+        ? { data: { ...wall, join_url: joinUrl }, response: new Response() }
         : signedIn
           ? {
               data: { id: 9, email: 'me@example.com', display_name: 'Me' },
@@ -81,11 +87,18 @@ describe('Wall', () => {
     expect(screen.getByRole('article', { name: 'Anonymous' })).toBeInTheDocument()
   })
 
-  it('links the QR code to the sign-in page', async () => {
+  it('shows the QR code while feedback is open', async () => {
     backend({ signedIn: false })
     render(<Wall />)
-    expect(await screen.findByText('http://192.168.1.20:5173')).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: /QR code/ })).toBeInTheDocument()
+    expect(await screen.findByRole('img', { name: 'QR code to join' })).toBeInTheDocument()
+    expect(screen.getByText('Scan to rate the course')).toBeInTheDocument()
+  })
+
+  it('takes the QR code down when feedback is closed', async () => {
+    backend({ signedIn: false, joinUrl: null })
+    render(<Wall />)
+    expect(await screen.findByText('Feedback is closed')).toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: 'QR code to join' })).not.toBeInTheDocument()
   })
 
   it('shows reaction counts but needs sign-in to react', async () => {

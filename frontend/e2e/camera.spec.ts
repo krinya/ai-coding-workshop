@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { signIn, uniqueEmail } from './helpers.ts'
+import { join } from './helpers.ts'
 
 // Chromium's fake webcam shows a test pattern, and camera access is pre-approved
 test.use({
@@ -11,7 +11,7 @@ test.use({
 })
 
 test('on a laptop, take a photo with a 3-2-1 countdown', async ({ page }) => {
-  await signIn(page, uniqueEmail('camera'), 'Cam')
+  await join(page, 'Cam')
 
   await page.getByRole('button', { name: 'Use camera' }).click()
   await expect(page.getByLabel('Camera preview')).toBeVisible()

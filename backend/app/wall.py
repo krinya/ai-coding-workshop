@@ -10,8 +10,7 @@ from pydantic import BaseModel
 from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 
-from app.auth import CurrentUser, OptionalUser
-from app.config import settings
+from app.auth import CurrentUser, OptionalUser, join_url, open_join_link
 from app.db import SessionDep
 from app.feedback import PublicFeedback, newest_first, to_public
 from app.models import Feedback, Reaction
@@ -57,7 +56,7 @@ class Wall(BaseModel):
     histogram: list[int]  # how many gave 1, 2, 3, 4 and 5 stars
     entries: list[WallEntry]
     words: list[WordCount]
-    join_url: str  # for the QR code
+    join_url: str | None  # for the QR code; None while feedback is closed
 
 
 def top_words(comments: list[str], limit: int = 30) -> list[WordCount]:
@@ -106,7 +105,7 @@ def wall(db: SessionDep, viewer: OptionalUser) -> Wall:
             for entry in entries
         ],
         words=top_words([entry.comment for entry in entries]),
-        join_url=settings.public_url,
+        join_url=join_url(open_join_link(db)),
     )
 
 

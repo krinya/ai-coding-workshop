@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
-from app import auth, feedback, wall
+from app import admin, auth, feedback, wall
 from app.config import settings
 from app.db import database_is_up
 
@@ -34,7 +34,6 @@ class Health(BaseModel):
     database: bool
     # Which integrations have a key in .env — never the key itself
     llm_configured: bool
-    email_configured: bool
 
 
 @api.get("/health")
@@ -44,11 +43,11 @@ def health() -> Health:
         environment=settings.environment,
         database=database_is_up(),
         llm_configured=settings.llm_api_key is not None,
-        email_configured=settings.resend_api_key is not None,
     )
 
 
 api.include_router(auth.router)
 api.include_router(feedback.router)
 api.include_router(wall.router)
+api.include_router(admin.router)
 app.include_router(api)

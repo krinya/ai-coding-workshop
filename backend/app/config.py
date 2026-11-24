@@ -40,15 +40,10 @@ class Settings(BaseSettings):
     openai_api_key: SecretStr | None = None
     anthropic_api_key: SecretStr | None = None
 
-    # Email — sent through Resend (https://resend.com) when RESEND_API_KEY is set, otherwise
-    # over SMTP to Mailpit, which catches every email locally (inbox: http://localhost:8025)
-    resend_api_key: SecretStr | None = None
-    email_from: str = "Workshop <onboarding@resend.dev>"
-    smtp_host: str = "localhost"
-    smtp_port: int = 1025
-
-    # Sign-in. The secret key makes the stored login-code hashes useless without it.
+    # Sign-in. The secret key makes stored session hashes useless without it.
     secret_key: SecretStr = SecretStr("dev-only-secret-change-me")
+    # The host signs in at /admin with this password to open and close the QR code.
+    admin_password: SecretStr = SecretStr("admin")
     # Send the session cookie only over HTTPS. Turn on when the site is served over HTTPS.
     cookie_secure: bool = False
 
@@ -57,10 +52,15 @@ class Settings(BaseSettings):
     public_url: str = "http://localhost:5173"
 
     @model_validator(mode="after")
-    def real_secret_outside_development(self) -> Self:
-        default_key = type(self).model_fields["secret_key"].default
-        if self.environment != "development" and self.secret_key == default_key:
-            raise ValueError("Set SECRET_KEY in .env: the built-in one is only for development.")
+    def real_secrets_outside_development(self) -> Self:
+        if self.environment == "development":
+            return self
+        defaults = type(self).model_fields
+        if self.secret_key == defaults["secret_key"].default:
+            raise ValueError("Set SECRET_KEY: the built-in one is only for development.")
+        password = self.admin_password.get_secret_value()
+        if self.admin_password == defaults["admin_password"].default or len(password) < 16:
+            raise ValueError("Set ADMIN_PASSWORD to a long random string (16+ characters).")
         return self
 
 

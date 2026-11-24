@@ -18,29 +18,29 @@ from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 from app.db import Base
 
 
+class JoinLink(Base):
+    """The link in the QR code. The host opens one; closing it stops new people from joining."""
+
+    __tablename__ = "join_links"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    token: Mapped[str] = mapped_column(String(64), unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 class User(Base):
-    """Created on the first successful sign-in — that is the registration."""
+    """Created when someone scans the QR code (or when the host signs in as admin)."""
 
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    email: Mapped[str] = mapped_column(String(320), unique=True)
     display_name: Mapped[str | None] = mapped_column(String(50))
+    is_admin: Mapped[bool] = mapped_column(default=False)
+    join_link_id: Mapped[int | None] = mapped_column(
+        ForeignKey("join_links.id", ondelete="SET NULL")
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-
-
-class LoginCode(Base):
-    """A 6-digit code emailed to an address. Only a hash of the code is stored."""
-
-    __tablename__ = "login_codes"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    email: Mapped[str] = mapped_column(String(320), index=True)
-    code_hash: Mapped[str] = mapped_column(String(64))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    wrong_tries: Mapped[int] = mapped_column(default=0)
-    used: Mapped[bool] = mapped_column(default=False)
 
 
 class UserSession(Base):

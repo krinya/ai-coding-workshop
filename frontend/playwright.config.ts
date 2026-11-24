@@ -5,7 +5,8 @@ import { defineConfig, devices } from '@playwright/test'
 // backend and frontend itself (Postgres must be running: `make db`).
 export default defineConfig({
   testDir: './e2e',
-  fullyParallel: true,
+  // One test at a time: the tests share the one QR link, and the admin test opens and closes it
+  workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',

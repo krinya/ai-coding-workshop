@@ -3,14 +3,13 @@
 from fastapi.testclient import TestClient
 
 from app.config import settings
+from app.models import JoinLink
 from app.wall import top_words
-from tests.conftest import FakeEmailSender, sign_in
+from tests.conftest import Be
 
 
-def give_feedback(
-    client: TestClient, outbox: FakeEmailSender, email: str, rating: int, comment: str = ""
-) -> int:
-    sign_in(client, outbox, email, name=email.split("@")[0].title())
+def give_feedback(client: TestClient, be: Be, name: str, rating: int, comment: str = "") -> int:
+    be(name)
     response = client.post("/api/feedback", json={"rating": rating, "comment": comment})
     assert response.status_code == 201
     feedback_id: int = response.json()["id"]
@@ -26,10 +25,10 @@ def test_empty_wall(client: TestClient) -> None:
     assert wall["words"] == []
 
 
-def test_average_and_histogram(client: TestClient, outbox: FakeEmailSender) -> None:
-    give_feedback(client, outbox, "a@example.com", 5)
-    give_feedback(client, outbox, "b@example.com", 4)
-    give_feedback(client, outbox, "c@example.com", 4)
+def test_average_and_histogram(client: TestClient, be: Be) -> None:
+    give_feedback(client, be, "A", 5)
+    give_feedback(client, be, "B", 4)
+    give_feedback(client, be, "C", 4)
     client.post("/api/auth/sign-out")
 
     wall = client.get("/api/wall").json()
@@ -39,8 +38,8 @@ def test_average_and_histogram(client: TestClient, outbox: FakeEmailSender) -> N
     assert wall["histogram"] == [0, 0, 0, 2, 1]  # how many gave 1, 2, 3, 4, 5 stars
 
 
-def test_entries_show_names_but_never_emails(client: TestClient, outbox: FakeEmailSender) -> None:
-    give_feedback(client, outbox, "ada@example.com", 5, "Brilliant")
+def test_entries_show_names_but_never_emails(client: TestClient, be: Be) -> None:
+    give_feedback(client, be, "Ada", 5, "Brilliant")
     client.post("/api/auth/sign-out")
 
     response = client.get("/api/wall")
@@ -51,15 +50,18 @@ def test_entries_show_names_but_never_emails(client: TestClient, outbox: FakeEma
     assert "@" not in response.text
 
 
-def test_join_url_points_to_the_sign_in_page(client: TestClient) -> None:
-    assert client.get("/api/wall").json()["join_url"] == settings.public_url
+def test_no_qr_code_while_feedback_is_closed(client: TestClient) -> None:
+    assert client.get("/api/wall").json()["join_url"] is None
 
 
-def test_word_cloud_counts_words_and_skips_common_ones(
-    client: TestClient, outbox: FakeEmailSender
-) -> None:
-    give_feedback(client, outbox, "a@example.com", 5, "The demos were great and fun")
-    give_feedback(client, outbox, "b@example.com", 4, "Great demos! The pace is GREAT.")
+def test_qr_code_links_to_the_open_join_link(client: TestClient, open_link: JoinLink) -> None:
+    join_url = client.get("/api/wall").json()["join_url"]
+    assert join_url == f"{settings.public_url}/join/{open_link.token}"
+
+
+def test_word_cloud_counts_words_and_skips_common_ones(client: TestClient, be: Be) -> None:
+    give_feedback(client, be, "A", 5, "The demos were great and fun")
+    give_feedback(client, be, "B", 4, "Great demos! The pace is GREAT.")
 
     words = client.get("/api/wall").json()["words"]
 
@@ -80,20 +82,20 @@ def test_top_words_ignores_short_words_and_limits_the_list() -> None:
     assert all(len(word.word) >= 3 for word in words)
 
 
-def test_reacting_needs_sign_in(client: TestClient, outbox: FakeEmailSender) -> None:
-    feedback_id = give_feedback(client, outbox, "a@example.com", 5)
+def test_reacting_needs_sign_in(client: TestClient, be: Be) -> None:
+    feedback_id = give_feedback(client, be, "A", 5)
     client.post("/api/auth/sign-out")
     response = client.post(f"/api/feedback/{feedback_id}/reactions", json={"emoji": "clap"})
     assert response.status_code == 401
 
 
-def test_reactions_are_counted_and_toggle(client: TestClient, outbox: FakeEmailSender) -> None:
-    feedback_id = give_feedback(client, outbox, "a@example.com", 5)
+def test_reactions_are_counted_and_toggle(client: TestClient, be: Be) -> None:
+    feedback_id = give_feedback(client, be, "A", 5)
     url = f"/api/feedback/{feedback_id}/reactions"
 
     client.post(url, json={"emoji": "clap"})
     client.post(url, json={"emoji": "heart"})
-    sign_in(client, outbox, "b@example.com")
+    be("B")
     client.post(url, json={"emoji": "clap"})
 
     entry = client.get("/api/wall").json()["entries"][0]
@@ -113,8 +115,8 @@ def test_reactions_are_counted_and_toggle(client: TestClient, outbox: FakeEmailS
     assert entry["my_reactions"] == []
 
 
-def test_only_known_emoji_on_existing_entries(client: TestClient, outbox: FakeEmailSender) -> None:
-    feedback_id = give_feedback(client, outbox, "a@example.com", 5)
+def test_only_known_emoji_on_existing_entries(client: TestClient, be: Be) -> None:
+    feedback_id = give_feedback(client, be, "A", 5)
     url = f"/api/feedback/{feedback_id}/reactions"
     assert client.post(url, json={"emoji": "poop"}).status_code == 422
     assert client.post("/api/feedback/999999/reactions", json={"emoji": "clap"}).status_code == 404

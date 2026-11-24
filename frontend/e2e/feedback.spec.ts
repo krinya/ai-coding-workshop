@@ -2,12 +2,12 @@ import { fileURLToPath } from 'node:url'
 
 import { expect, test } from '@playwright/test'
 
-import { signIn, uniqueEmail } from './helpers.ts'
+import { join } from './helpers.ts'
 
 const TEST_PHOTO = fileURLToPath(new URL('./fixtures/test-photo.png', import.meta.url))
 
 test('send feedback with a filtered photo, edit it, delete it', async ({ page }) => {
-  await signIn(page, uniqueEmail('feedback'), 'Linus')
+  await join(page, 'Linus')
 
   await page.getByRole('radio', { name: '4 stars' }).check({ force: true })
   await page.getByLabel('Comment').fill('Loved the live demos')

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 
 import { api } from './api/client'
 import type { Me } from './api/types'
-import SignIn from './auth/SignIn'
 import FeedbackForm from './feedback/FeedbackForm'
 
 const REPO_URL = 'https://github.com/krinya/ai-coding-workshop'
@@ -43,11 +42,22 @@ export default function App() {
         )}
       </header>
 
-      {me === null && <SignIn onSignedIn={setMe} />}
+      {me === null && (
+        <section className="flex w-full max-w-xl flex-col items-center gap-3 rounded-2xl bg-white p-8 text-center shadow-lg ring-1 ring-slate-200">
+          <span className="text-5xl" aria-hidden="true">
+            📱
+          </span>
+          <h2 className="text-xl font-semibold text-slate-900">Scan the QR code to join</h2>
+          <p className="text-slate-600">
+            The QR code is on the big screen. Scan it with your phone's camera to give your
+            feedback.
+          </p>
+        </section>
+      )}
       {me && (
         <>
           <p className="-mb-4 w-full max-w-xl text-slate-700">
-            Hi <strong>{me.display_name ?? me.email}</strong> — tell us what you thought.
+            Hi{me.display_name && <strong> {me.display_name}</strong>} — tell us what you thought.
           </p>
           <FeedbackForm />
         </>
@@ -57,6 +67,11 @@ export default function App() {
         <a href="/wall" className="underline hover:text-slate-800">
           Live wall
         </a>
+        {me?.is_admin && (
+          <a href="/admin" className="underline hover:text-slate-800">
+            Host controls
+          </a>
+        )}
         <a
           href={REPO_URL}
           target="_blank"

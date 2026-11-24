@@ -89,19 +89,22 @@ export default function Wall() {
             </div>
           </section>
 
-          <section className="hidden items-center gap-4 rounded-3xl bg-white p-4 text-slate-900 lg:flex">
-            <QRCodeSVG
-              value={wall.join_url}
-              size={128}
-              role="img"
-              aria-label="QR code to the sign-in page"
-              className="shrink-0"
-            />
-            <div className="min-w-0">
-              <p className="text-lg leading-snug font-bold">Scan to rate the course</p>
-              <p className="mt-1 text-sm break-all text-slate-500">{wall.join_url}</p>
-            </div>
-          </section>
+          {wall.join_url ? (
+            <section className="hidden items-center gap-4 rounded-3xl bg-white p-4 text-slate-900 lg:flex">
+              <QRCodeSVG
+                value={wall.join_url}
+                size={128}
+                role="img"
+                aria-label="QR code to join"
+                className="shrink-0"
+              />
+              <p className="text-xl leading-snug font-bold">Scan to rate the course</p>
+            </section>
+          ) : (
+            <section className="rounded-3xl bg-white/5 p-6 text-center text-xl text-slate-300 ring-1 ring-white/10">
+              Feedback is closed
+            </section>
+          )}
         </aside>
 
         <div className="flex flex-col gap-6">
@@ -120,7 +123,7 @@ export default function Wall() {
 
           {wall.entries.length === 0 ? (
             <p className="py-20 text-center text-2xl text-slate-400">
-              No feedback yet — scan the QR code and be the first!
+              No feedback yet{wall.join_url ? ' — scan the QR code and be the first!' : '.'}
             </p>
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] sm:gap-6">

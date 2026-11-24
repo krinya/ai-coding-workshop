@@ -6,7 +6,6 @@ requires-python = ">=3.14"
 dependencies = [
     "alembic>=1.20.1",
     "fastapi[standard]>=0.165.0",
-    "httpx>=0.28.1",
     "pillow>=13.0.0",
     "psycopg[binary]>=3.3.9",
     "pydantic-settings>=2.16.3",
@@ -33,7 +32,7 @@ select = ["E", "W", "F", "I", "B", "UP", "SIM", "RUF", "ASYNC", "S", "N"]
 ignore = []
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101"]
+"tests/**" = ["S101", "S106"]  # asserts, and fixed tokens in test data
 
 [tool.mypy]
 python_version = "3.14"

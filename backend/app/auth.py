@@ -1,4 +1,5 @@
-"""Sign-in with a 6-digit code sent by email. The first sign-in creates the account.
+"""Joining by scanning the QR code, and the host's admin sign-in. No passwords for participants,
+no email: the QR code on the wall holds a link with a secret token, and opening it signs you in.
 
 Use the signed-in user in a route:
 
@@ -15,18 +16,14 @@ from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
-from pydantic import BaseModel, EmailStr, Field, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints
 from sqlalchemy import delete, func, select
 
 from app.config import settings
 from app.db import SessionDep
-from app.mailer import Email, EmailNotSentError, EmailSenderDep
-from app.models import LoginCode, User, UserSession
+from app.models import JoinLink, User, UserSession
 
-CODE_LIFETIME = timedelta(minutes=10)
-MAX_WRONG_TRIES = 5
-MAX_CODES_PER_WINDOW = 3
-RATE_LIMIT_WINDOW = timedelta(minutes=15)
+MAX_JOINS_PER_LINK = 300  # stops one person from creating endless accounts with an open link
 SESSION_LIFETIME = timedelta(days=30)
 COOKIE_NAME = "session"
 
@@ -38,25 +35,34 @@ def now() -> datetime:
 
 
 def hash_secret(value: str) -> str:
-    """A keyed hash (HMAC): without SECRET_KEY, a stolen hash cannot be matched to its code."""
+    """A keyed hash (HMAC): without SECRET_KEY, a stolen hash cannot be matched to its token."""
     key = settings.secret_key.get_secret_value().encode()
     return hmac.new(key, value.encode(), hashlib.sha256).hexdigest()
+
+
+def open_join_link(db: SessionDep) -> JoinLink | None:
+    """The link in the QR code right now, or None while feedback is closed."""
+    return db.scalars(
+        select(JoinLink).where(JoinLink.closed_at.is_(None)).order_by(JoinLink.id.desc())
+    ).first()
+
+
+def join_url(link: JoinLink | None) -> str | None:
+    return f"{settings.public_url.rstrip('/')}/join/{link.token}" if link else None
 
 
 # ── Request and response bodies ──────────────────────────────────────────────
 
 
-class CodeRequest(BaseModel):
-    email: EmailStr
-
-
-class CodeVerification(BaseModel):
-    email: EmailStr
-    code: str = Field(pattern=r"^\d{6}$")
-    # Only used when this sign-in creates the account
+class JoinRequest(BaseModel):
+    token: str = Field(max_length=64)
     display_name: Annotated[str, StringConstraints(strip_whitespace=True, max_length=50)] | None = (
         None
     )
+
+
+class AdminSignIn(BaseModel):
+    password: str = Field(max_length=200)
 
 
 class Message(BaseModel):
@@ -65,8 +71,12 @@ class Message(BaseModel):
 
 class Me(BaseModel):
     id: int
-    email: str
     display_name: str | None
+    is_admin: bool
+
+
+def to_me(user: User) -> Me:
+    return Me(id=user.id, display_name=user.display_name, is_admin=user.is_admin)
 
 
 # ── Who is signed in ─────────────────────────────────────────────────────────
@@ -89,86 +99,24 @@ def optional_user(db: SessionDep, token: SessionCookie = None) -> User | None:
 def current_user(user: Annotated[User | None, Depends(optional_user)]) -> User:
     """The signed-in user; answers 401 when nobody is signed in."""
     if user is None:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Sign in first.")
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Scan the QR code to join first.")
+    return user
+
+
+def admin_user(user: Annotated[User, Depends(current_user)]) -> User:
+    """The signed-in host; answers 403 for everyone else."""
+    if not user.is_admin:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Only the host can do this.")
     return user
 
 
 OptionalUser = Annotated[User | None, Depends(optional_user)]
 CurrentUser = Annotated[User, Depends(current_user)]
+AdminUser = Annotated[User, Depends(admin_user)]
 
 
-# ── Routes ───────────────────────────────────────────────────────────────────
-
-
-@router.post("/request-code")
-def request_code(body: CodeRequest, db: SessionDep, mailer: EmailSenderDep) -> Message:
-    email = body.email.lower()
-    recent_codes = db.scalar(
-        select(func.count())
-        .select_from(LoginCode)
-        .where(LoginCode.email == email, LoginCode.created_at > now() - RATE_LIMIT_WINDOW)
-    )
-    if (recent_codes or 0) >= MAX_CODES_PER_WINDOW:
-        raise HTTPException(
-            status.HTTP_429_TOO_MANY_REQUESTS,
-            "Too many codes requested. Wait 15 minutes and try again.",
-        )
-
-    code = f"{secrets.randbelow(1_000_000):06d}"
-    db.add(
-        LoginCode(
-            email=email,
-            code_hash=hash_secret(code),
-            created_at=now(),
-            expires_at=now() + CODE_LIFETIME,
-        )
-    )
-    try:
-        mailer.send(
-            Email(
-                to=email,
-                subject=f"Your sign-in code: {code}",
-                text=f"Your code is {code}\n\nIt works once, for 10 minutes. "
-                "If you did not ask for it, ignore this email.",
-            )
-        )
-    except EmailNotSentError as error:
-        db.rollback()  # a code that never arrived should not count toward the limit
-        raise HTTPException(
-            status.HTTP_503_SERVICE_UNAVAILABLE, "We could not send the email. Try again soon."
-        ) from error
-    db.commit()
-    # The same answer for every address, so nobody can probe who has an account
-    return Message(detail="We sent a 6-digit code to that address.")
-
-
-@router.post("/verify-code")
-def verify_code(body: CodeVerification, db: SessionDep, response: Response) -> Me:
-    email = body.email.lower()
-    login = db.scalars(
-        select(LoginCode)
-        .where(LoginCode.email == email, LoginCode.used.is_(False))
-        .order_by(LoginCode.created_at.desc())
-        # Lock the row: simultaneous guesses wait their turn, so each one counts toward the
-        # 5-tries limit, and one code can never sign in twice
-        .with_for_update()
-    ).first()
-    if login is None or login.expires_at <= now() or login.wrong_tries >= MAX_WRONG_TRIES:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST, "This code has expired. Request a new one."
-        )
-    if not hmac.compare_digest(login.code_hash, hash_secret(body.code)):
-        login.wrong_tries += 1
-        db.commit()
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Wrong code. Check the email again.")
-
-    login.used = True
-    user = db.scalars(select(User).where(User.email == email)).first()
-    if user is None:
-        user = User(email=email, display_name=body.display_name or None)
-        db.add(user)
-        db.flush()  # gives the new user its id
-
+def start_session(db: SessionDep, response: Response, user: User) -> None:
+    """Remember this browser: a random token in an httpOnly cookie, only its hash in the DB."""
     token = secrets.token_urlsafe(32)
     db.add(
         UserSession(
@@ -184,12 +132,52 @@ def verify_code(body: CodeVerification, db: SessionDep, response: Response) -> M
         samesite="lax",  # other sites cannot send it with their forms
         secure=settings.cookie_secure,
     )
-    return Me(id=user.id, email=user.email, display_name=user.display_name)
+
+
+# ── Routes ───────────────────────────────────────────────────────────────────
+
+
+@router.post("/join")
+def join(body: JoinRequest, db: SessionDep, response: Response, viewer: OptionalUser) -> Me:
+    """Opening the QR code's link. The first time it creates your account."""
+    link = open_join_link(db)
+    if link is None or not hmac.compare_digest(link.token, body.token):
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "This QR code is not active any more. Scan the one on the screen.",
+        )
+    if viewer is not None:
+        return to_me(viewer)  # scanned again: keep the same account
+
+    joined = db.scalar(select(func.count()).select_from(User).where(User.join_link_id == link.id))
+    if (joined or 0) >= MAX_JOINS_PER_LINK:
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS, "Too many people joined with this QR code."
+        )
+    user = User(display_name=body.display_name or None, join_link_id=link.id)
+    db.add(user)
+    db.flush()  # gives the new user its id
+    start_session(db, response, user)
+    return to_me(user)
+
+
+@router.post("/admin")
+def admin_sign_in(body: AdminSignIn, db: SessionDep, response: Response) -> Me:
+    expected = settings.admin_password.get_secret_value()
+    if not hmac.compare_digest(body.password.encode(), expected.encode()):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Wrong password.")
+    admin = db.scalars(select(User).where(User.is_admin)).first()
+    if admin is None:
+        admin = User(display_name="Host", is_admin=True)
+        db.add(admin)
+        db.flush()
+    start_session(db, response, admin)
+    return to_me(admin)
 
 
 @router.get("/me")
 def me(user: CurrentUser) -> Me:
-    return Me(id=user.id, email=user.email, display_name=user.display_name)
+    return to_me(user)
 
 
 @router.post("/sign-out")

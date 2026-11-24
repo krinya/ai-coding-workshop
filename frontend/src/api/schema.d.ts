@@ -21,7 +21,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/auth/request-code": {
+    "/api/auth/join": {
         parameters: {
             query?: never;
             header?: never;
@@ -30,15 +30,18 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Request Code */
-        post: operations["request_code"];
+        /**
+         * Join
+         * @description Opening the QR code's link. The first time it creates your account.
+         */
+        post: operations["join"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/auth/verify-code": {
+    "/api/auth/admin": {
         parameters: {
             query?: never;
             header?: never;
@@ -47,8 +50,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Verify Code */
-        post: operations["verify_code"];
+        /** Admin Sign In */
+        post: operations["admin_sign_in"];
         delete?: never;
         options?: never;
         head?: never;
@@ -196,29 +199,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/join-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Join Link */
+        get: operations["get_join_link"];
+        put?: never;
+        /**
+         * Open Feedback
+         * @description Show a QR code with a brand-new link (the old link stops working).
+         */
+        post: operations["open_feedback"];
+        /**
+         * Close Feedback
+         * @description Take the QR code down. People who already joined can still edit their feedback.
+         */
+        delete: operations["close_feedback"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/feedback/{feedback_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Feedback */
+        delete: operations["remove_feedback"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** CodeRequest */
-        CodeRequest: {
-            /**
-             * Email
-             * Format: email
-             */
-            email: string;
-        };
-        /** CodeVerification */
-        CodeVerification: {
-            /**
-             * Email
-             * Format: email
-             */
-            email: string;
-            /** Code */
-            code: string;
-            /** Display Name */
-            display_name?: string | null;
+        /** AdminSignIn */
+        AdminSignIn: {
+            /** Password */
+            password: string;
         };
         /** FeedbackIn */
         FeedbackIn: {
@@ -257,17 +287,29 @@ export interface components {
             database: boolean;
             /** Llm Configured */
             llm_configured: boolean;
-            /** Email Configured */
-            email_configured: boolean;
+        };
+        /** JoinLinkStatus */
+        JoinLinkStatus: {
+            /** Join Url */
+            join_url: string | null;
+            /** Joined */
+            joined: number;
+        };
+        /** JoinRequest */
+        JoinRequest: {
+            /** Token */
+            token: string;
+            /** Display Name */
+            display_name?: string | null;
         };
         /** Me */
         Me: {
             /** Id */
             id: number;
-            /** Email */
-            email: string;
             /** Display Name */
             display_name: string | null;
+            /** Is Admin */
+            is_admin: boolean;
         };
         /** Message */
         Message: {
@@ -374,7 +416,7 @@ export interface components {
             /** Words */
             words: components["schemas"]["WordCount"][];
             /** Join Url */
-            join_url: string;
+            join_url: string | null;
         };
         /** WallEntry */
         WallEntry: {
@@ -433,16 +475,18 @@ export interface operations {
             };
         };
     };
-    request_code: {
+    join: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                session?: string | null;
+            };
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CodeRequest"];
+                "application/json": components["schemas"]["JoinRequest"];
             };
         };
         responses: {
@@ -452,7 +496,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Message"];
+                    "application/json": components["schemas"]["Me"];
                 };
             };
             /** @description Validation Error */
@@ -466,7 +510,7 @@ export interface operations {
             };
         };
     };
-    verify_code: {
+    admin_sign_in: {
         parameters: {
             query?: never;
             header?: never;
@@ -475,7 +519,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CodeVerification"];
+                "application/json": components["schemas"]["AdminSignIn"];
             };
         };
         responses: {
@@ -809,6 +853,130 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ReactionState"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_join_link: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinLinkStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_feedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinLinkStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    close_feedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinLinkStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_feedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feedback_id: number;
+            };
+            cookie?: {
+                session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

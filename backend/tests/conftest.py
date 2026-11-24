@@ -11,9 +11,9 @@ Use them by naming them as arguments:
         assert client.get("/api/notes").json() == [...]
 """
 
-import re
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Protocol
 
 import pytest
 from alembic import command
@@ -23,10 +23,11 @@ from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.engine import URL, make_url
 from sqlalchemy.orm import Session
 
+from app.auth import now
 from app.config import settings
 from app.db import get_session
-from app.mailer import Email, EmailNotSentError, get_email_sender
 from app.main import app
+from app.models import JoinLink
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 
@@ -72,45 +73,48 @@ def db(engine: Engine) -> Iterator[Session]:
         transaction.rollback()
 
 
-class FakeEmailSender:
-    """Keeps emails in a list instead of sending them, so tests never send real email."""
-
-    def __init__(self) -> None:
-        self.sent: list[Email] = []
-        self.broken = False  # set to True to act like a mail server that is down
-
-    def send(self, email: Email) -> None:
-        if self.broken:
-            raise EmailNotSentError
-        self.sent.append(email)
-
-    def last_code(self) -> str:
-        match = re.search(r"\b\d{6}\b", self.sent[-1].text)
-        assert match, "the last email has no 6-digit code"
-        return match.group()
-
-
 @pytest.fixture
-def outbox() -> FakeEmailSender:
-    return FakeEmailSender()
-
-
-@pytest.fixture
-def client(db: Session, outbox: FakeEmailSender) -> Iterator[TestClient]:
-    """An HTTP client for the app whose routes use the test session and the fake email sender."""
+def client(db: Session) -> Iterator[TestClient]:
+    """An HTTP client for the app whose routes use the test session above."""
     app.dependency_overrides[get_session] = lambda: db
-    app.dependency_overrides[get_email_sender] = lambda: outbox
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
 
 
-def sign_in(
-    client: TestClient, outbox: FakeEmailSender, email: str, name: str | None = None
-) -> None:
-    """Sign in through the real endpoints (the client keeps the session cookie)."""
-    client.post("/api/auth/sign-out")
-    client.post("/api/auth/request-code", json={"email": email})
-    code = outbox.last_code()
-    body = {"email": email, "code": code, "display_name": name}
-    assert client.post("/api/auth/verify-code", json=body).status_code == 200
+@pytest.fixture
+def open_link(db: Session) -> JoinLink:
+    """An open join link, as if the host had clicked "Open feedback"."""
+    link = JoinLink(token="test-join-token", created_at=now())
+    db.add(link)
+    db.flush()
+    return link
+
+
+class Be(Protocol):
+    def __call__(self, name: str, *, show_name: bool = True) -> None: ...
+
+
+@pytest.fixture
+def be(client: TestClient, open_link: JoinLink) -> Be:
+    """`be("Ada")` joins as Ada the first time (by "scanning" the QR code), and switches back
+    to Ada later by restoring her session cookie."""
+    cookies: dict[str, str] = {}
+
+    def switch(name: str, *, show_name: bool = True) -> None:
+        if name in cookies:
+            client.cookies.clear()
+            client.cookies.set("session", cookies[name])
+            return
+        client.cookies.clear()
+        body = {"token": open_link.token, "display_name": name if show_name else None}
+        assert client.post("/api/auth/join", json=body).status_code == 200
+        cookies[name] = client.cookies["session"]
+
+    return switch
+
+
+def sign_in_as_admin(client: TestClient) -> None:
+    client.cookies.clear()
+    password = settings.admin_password.get_secret_value()
+    assert client.post("/api/auth/admin", json={"password": password}).status_code == 200
