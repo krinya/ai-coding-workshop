@@ -16,8 +16,8 @@ setup: ## First-time setup: .env, dependencies, Playwright's browser
 	$(FRONTEND) npx playwright install chromium
 
 # ── Run ──────────────────────────────────────────────────────────────────────
-up: ## Start the whole stack in Docker (http://localhost:5173)
-	docker compose up --build -d --wait
+up: ## Start the whole stack in Docker (http://localhost:5173); fresh node_modules from the image
+	docker compose up --build --renew-anon-volumes -d --wait
 	@echo "Frontend: http://localhost:5173   API docs: http://localhost:8000/docs"
 
 down: ## Stop the stack (the database keeps its data)

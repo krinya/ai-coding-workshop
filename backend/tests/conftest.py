@@ -100,3 +100,14 @@ def client(db: Session, outbox: FakeEmailSender) -> Iterator[TestClient]:
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
+
+
+def sign_in(
+    client: TestClient, outbox: FakeEmailSender, email: str, name: str | None = None
+) -> None:
+    """Sign in through the real endpoints (the client keeps the session cookie)."""
+    client.post("/api/auth/sign-out")
+    client.post("/api/auth/request-code", json={"email": email})
+    code = outbox.last_code()
+    body = {"email": email, "code": code, "display_name": name}
+    assert client.post("/api/auth/verify-code", json=body).status_code == 200

@@ -8,11 +8,11 @@ import { api } from './api/client'
 vi.mock('./api/client', () => ({ api: { GET: vi.fn(), POST: vi.fn() } }))
 
 function signedInAs(me: { id: number; email: string; display_name: string | null } | null) {
-  vi.mocked(api.GET).mockResolvedValue(
-    me
-      ? { data: me, response: new Response() }
-      : { error: { detail: 'Sign in first.' }, response: new Response() },
-  )
+  const answer = (path: string) =>
+    path === '/api/auth/me' && !me
+      ? { error: { detail: 'Sign in first.' }, response: new Response() }
+      : { data: path === '/api/auth/me' ? me : null, response: new Response() }
+  vi.mocked(api.GET).mockImplementation(((path: string) => Promise.resolve(answer(path))) as never)
 }
 
 describe('App', () => {

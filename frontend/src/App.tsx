@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { api } from './api/client'
 import type { Me } from './api/types'
 import SignIn from './auth/SignIn'
+import FeedbackForm from './feedback/FeedbackForm'
 
 const REPO_URL = 'https://github.com/krinya/ai-coding-workshop'
 
@@ -11,10 +12,14 @@ export default function App() {
   const [me, setMe] = useState<Me | null | undefined>(undefined)
 
   useEffect(() => {
+    let current = true // ignore a late answer from an earlier run of this effect
     api
       .GET('/api/auth/me')
-      .then(({ data }) => setMe(data ?? null))
-      .catch(() => setMe(null))
+      .then(({ data }) => current && setMe(data ?? null))
+      .catch(() => current && setMe(null))
+    return () => {
+      current = false
+    }
   }, [])
 
   async function signOut() {
@@ -40,9 +45,12 @@ export default function App() {
 
       {me === null && <SignIn onSignedIn={setMe} />}
       {me && (
-        <p className="text-slate-700">
-          Signed in as <strong>{me.display_name ?? me.email}</strong>
-        </p>
+        <>
+          <p className="-mb-4 w-full max-w-xl text-slate-700">
+            Hi <strong>{me.display_name ?? me.email}</strong> — tell us what you thought.
+          </p>
+          <FeedbackForm />
+        </>
       )}
 
       <footer className="mt-auto flex gap-4 text-sm text-slate-500">
