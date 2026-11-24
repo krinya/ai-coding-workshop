@@ -16,7 +16,8 @@ feature.
 | AI | [`CLAUDE.md`](CLAUDE.md) (also `AGENTS.md`), Playwright MCP so the assistant can see the page, a format-on-edit hook, `/check`, a `reviewer` agent |
 
 What each building block does, why it is here and how it helps the AI:
-[docs/building-blocks.md](docs/building-blocks.md).
+[docs/building-blocks.md](docs/building-blocks.md). Each tool catching a real mistake, with its
+output and the fix: [docs/tool-examples.md](docs/tool-examples.md).
 
 ## Prerequisites
 

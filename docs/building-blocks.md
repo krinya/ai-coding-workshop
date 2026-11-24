@@ -218,6 +218,8 @@ consistent indentation and line endings in any editor.
 
 ## Where to go next
 
+- [tool-examples.md](tool-examples.md) — each tool catching a real mistake: the code, the exact
+  output, and the fix.
 - The tools' own docs: [FastAPI](https://fastapi.tiangolo.com/) ·
   [SQLAlchemy](https://docs.sqlalchemy.org/en/20/) · [Alembic](https://alembic.sqlalchemy.org/) ·
   [React](https://react.dev/) · [Vite](https://vite.dev/) · [Tailwind](https://tailwindcss.com/) ·
